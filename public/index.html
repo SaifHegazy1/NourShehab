@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>ENG NOUR SHEHAB | MATH CAPSULE</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0f2a 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .navbar{
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-container{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo{
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+        .logo span{
+            font-weight: 400;
+            font-size: 0.9rem;
+            background: none;
+            color: #94a3b8;
+        }
+        .nav-links{
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-links a{
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover{
+            color: #38bdf8;
+        }
+        .hero{
+            max-width: 900px;
+            margin: 4rem auto;
+            text-align: center;
+            padding: 2rem;
+        }
+        .hero h1{
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .hero .capsule-badge{
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 100px;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(4px);
+        }
+        .hero p{
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .btn-group{
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn{
+            padding: 0.8rem 2rem;
+            border-radius: 100px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary{
+            background: #0ea5e9;
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+        .btn-primary:hover{
+            background: #0284c7;
+            transform: translateY(-2px);
+        }
+        .btn-secondary{
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+        .btn-secondary:hover{
+            background: rgba(56, 189, 248, 0.2);
+            transform: translateY(-2px);
+        }
+        .features{
+            max-width: 1000px;
+            margin: 4rem auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+        .feature-card{
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            transition: all 0.2s;
+        }
+        .feature-card:hover{
+            border-color: #38bdf8;
+            transform: translateY(-4px);
+        }
+        .feature-card h3{
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p{
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        footer{
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(56, 189, 248, 0.1);
+        }
+        @media (max-width: 640px){
+            .hero h1{font-size: 2.2rem;}
+            .nav-container{flex-direction: column; gap: 0.8rem;}
+            .logo{font-size: 1.2rem;}
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-container">
+            <div class="logo">⚡ ENG NOUR SHEHAB <span>| MATH CAPSULE</span></div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+                <a href="/student">Student Login</a>
+                <a href="/admin">Admin</a>
+            </div>
+        </div>
+    </div>
+    <div class="hero">
+        <div class="capsule-badge">📐 MATH CAPSULE • PRIME LEARNING</div>
+        <h1>Master Math with Precision</h1>
+        <p>Access exclusive video lessons, track your progress, and excel in engineering mathematics.</p>
+        <div class="btn-group">
+            <a href="/student" class="btn btn-primary">🎓 Student Portal</a>
+            <a href="/about" class="btn btn-secondary">📖 Meet Eng Nour</a>
+        </div>
+    </div>
+    <div class="features">
+        <div class="feature-card"><h3>🧪 Capsule Lessons</h3><p>Bite-sized, high-impact math videos tailored for engineering students.</p></div>
+        <div class="feature-card"><h3>🔐 Private & Secure</h3><p>Unique access codes + rotating watermark protect every session.</p></div>
+        <div class="feature-card"><h3>📊 View Manager</h3><p>Instructors control exactly how many times each student can watch.</p></div>
+    </div>
+    <footer>
+        <p>© 2025 ENG NOUR SHEHAB • MATH CAPSULE — All rights reserved.</p>
+    </footer>
+</body>
+</html>

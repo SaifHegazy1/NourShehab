@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>Watch | ENG NOUR SHEHAB MATH CAPSULE</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+        body{background:#0a0f1c;font-family:'Inter',system-ui,sans-serif}
+        .top-bar{
+            background: #0f172a;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+        }
+        .logo{
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .top-bar a{
+            color: #94a3b8;
+            text-decoration: none;
+            margin-left: 1.5rem;
+        }
+        .video-container{
+            max-width: 1100px;
+            margin: 2rem auto;
+            background: #000;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid #1e293b;
+        }
+        .video-wrapper{position:relative;width:100%;padding-bottom:56.25%}
+        .video-wrapper iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+        #playerContainer{position:absolute;top:0;left:0;width:100%;height:100%;}
+        .youtube-blocker{position:absolute;inset:0;z-index:24;pointer-events:none;}
+        .youtube-blocker-edge{position:absolute;background:transparent;pointer-events:all;}
+        .youtube-blocker-edge.top{top:0;left:0;width:100%;height:22%;}
+        .youtube-blocker-edge.bottom{bottom:0;left:0;width:100%;height:22%;}
+        .youtube-blocker-edge.left{top:22%;left:0;width:22%;height:56%;}
+        .youtube-blocker-edge.right{top:22%;right:0;width:22%;height:56%;}
+        .player-frame{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
+        .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:20;}
+        .player-overlay button{background:#38bdf8;border:none;color:#0f172a;font-size:1rem;font-weight:700;padding:0.9rem 1.8rem;border-radius:999px;cursor:pointer;box-shadow:0 15px 30px rgba(56,189,248,0.25);transition:transform 0.2s ease,filter 0.2s ease;}
+        .player-overlay button:hover{transform:translateY(-2px);filter:brightness(1.05);}
+        .video-wrapper .fullscreen-btn{position:absolute;top:16px;right:16px;z-index:30;}
+        .video-wrapper .player-watermark{position:absolute;top:16px;left:16px;z-index:40;pointer-events:none;}
+        .video-wrapper:fullscreen, .video-wrapper:-webkit-full-screen{padding-bottom:0;height:100%;width:100%;max-width:none;max-height:none;border-radius:0;}
+        .video-wrapper:fullscreen #playerContainer, .video-wrapper:-webkit-full-screen #playerContainer{height:100%;}
+        .video-wrapper:fullscreen .player-overlay, .video-wrapper:-webkit-full-screen .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;}
+        .video-wrapper:fullscreen .player-watermark, .video-wrapper:-webkit-full-screen .player-watermark{position:fixed;top:20px;left:20px;}
+        .info-bar{
+            background: #0f172a;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .video-title{color:#f1f5f9;font-weight:600}
+        .views-info{
+            background: #0ea5e9;
+            padding: 0.3rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .btn-outline{
+            background: transparent;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 0.4rem 1rem;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover{
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+        .change-password-panel{
+            display: none;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            padding: 1.25rem 2rem;
+            gap: 1rem;
+        }
+        .change-password-panel.active{display: flex;}
+        .change-password-panel .form-row{
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .change-password-panel label{
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .change-password-panel input{
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: #071022;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .change-password-panel input:focus{
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56,189,248,0.18);
+        }
+        .change-password-message{
+            font-size: 0.95rem;
+            min-height: 1.3rem;
+        }
+        .change-password-message.error{color: #f87171;}
+        .change-password-message.success{color: #4ade80;}
+        .watermark{
+            position: fixed;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            color: #38bdf8;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: monospace;
+            z-index: 1000;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(56,189,248,0.3);
+            transition: all 0.3s ease;
+        }
+        .corner-tl{top:20px;left:20px}
+        .corner-tr{top:20px;right:20px}
+        .corner-bl{bottom:20px;left:20px}
+        .corner-br{bottom:20px;right:20px}
+        @media(max-width:640px){
+            .watermark{font-size:10px;padding:4px 12px}
+            .info-bar{flex-direction:column;align-items:flex-start}
+            .change-password-panel{padding:1rem}
+        }
+    </style>
+    <script src="/api-base.js"></script>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo">📐 ENG NOUR SHEHAB | MATH CAPSULE</div>
+        <div><a href="/about">About</a><a href="/student" id="logoutLink">Logout</a></div>
+    </div>
+    <div class="video-container">
+        <div id="videosList" style="padding:1rem;display:flex;gap:1rem;flex-wrap:wrap;background:#071022;border-bottom:1px solid #0f172a"></div>
+        <div class="video-wrapper" id="playerWrapper">
+            <div id="playerContainer"></div>
+        </div>
+        <div class="info-bar">
+            <div class="video-title" id="videoTitle">Loading lesson...</div>
+            <div class="views-info" id="viewsInfo">🎬 Views: --</div>
+            <button class="btn-outline" id="changePwdBtn">Change Password</button>
+        </div>
+        <div class="change-password-panel" id="changePwdForm">
+            <div class="form-row">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" autocomplete="current-password" placeholder="Enter current password">
+            </div>
+            <div class="form-row">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" autocomplete="new-password" placeholder="Enter new password (min 4 chars)">
+            </div>
+            <button class="btn-outline" id="submitChangePwdBtn">Save Password</button>
+            <div class="change-password-message" id="changePwdMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if(!token) window.location.href = '/student';
+        let username = '', allocations = {}, viewConsumed = false, watermarkInterval = null;
+
+        function parseJWT(t){
+            try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch(e){return null}
+        }
+        const user = parseJWT(token);
+        if(!user || user.role !== 'student') { localStorage.removeItem('token'); window.location.href = '/student'; }
+        username = user.username;
+        refreshStudentInfo();
+
+        // Rotating watermark and fullscreen button
+        const videoWrapper = document.getElementById('playerWrapper');
+        const watermark = document.createElement('div');
+        watermark.className = 'watermark corner-tl';
+        watermark.textContent = `🧪 ${username} | MATH CAPSULE`;
+        videoWrapper.appendChild(watermark);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.id = 'fullscreenBtn';
+        fullscreenBtn.className = 'btn-outline fullscreen-btn';
+        fullscreenBtn.innerText = 'Fullscreen';
+        fullscreenBtn.onclick = toggleFullscreen;
+        videoWrapper.appendChild(fullscreenBtn);
+
+        const corners = ['corner-tl','corner-tr','corner-bl','corner-br'];
+        let idx = 0;
+        watermarkInterval = setInterval(() => { idx = (idx+1)%4; watermark.className = `watermark ${corners[idx]}`; }, 30000);
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                videoWrapper.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            fullscreenBtn.innerText = document.fullscreenElement === videoWrapper ? 'Exit Fullscreen' : 'Fullscreen';
+        });
+
+        // Anti-copy measures
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.key === 'F12' || (e.ctrlKey && (e.key === 'u'||e.key === 's'||e.key === 'I'))) e.preventDefault();
+        });
+
+        async function refreshStudentInfo() {
+            const res = await apiFetch('/api/student/me', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const data = await res.json();
+                allocations = {};
+                (data.perVideoViews || []).forEach(item => {
+                    allocations[item.video] = item.views || 0;
+                });
+                document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
+            }
+        }
+
+        async function loadVideos() {
+            const res = await apiFetch('/api/videos', { headers: { 'Authorization': `Bearer ${token}` } });
+            if(!res.ok) return document.getElementById('videosList').innerText = 'Unable to load videos';
+            const videos = await res.json();
+            const container = document.getElementById('videosList');
+            container.innerHTML = '';
+            videos.forEach(v => {
+                const card = document.createElement('div');
+                card.style.width = '220px';
+                card.style.background = '#071022';
+                card.style.border = '1px solid #0f172a';
+                card.style.borderRadius = '12px';
+                card.style.padding = '0.6rem';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.gap = '0.5rem';
+                const thumb = document.createElement('img');
+                thumb.style.objectFit = 'cover';
+                thumb.src = `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`;
+                thumb.style.width = '100%';
+                thumb.style.borderRadius = '8px';
+                const title = document.createElement('div');
+                title.style.color = '#e6eef8';
+                title.style.fontWeight = '600';
+                title.style.fontSize = '0.95rem';
+                title.innerText = v.title || 'Untitled';
+                const info = document.createElement('div');
+                info.style.color = '#94a3b8';
+                info.style.fontSize = '0.85rem';
+                const assigned = allocations[v._id] || 0;
+                info.innerText = assigned > 0 ? `Allocated: ${assigned} view${assigned===1?'':'s'}` : 'No allocated views';
+                const btn = document.createElement('button');
+                btn.className = 'btn-outline';
+                btn.innerText = assigned > 0 ? 'Watch (use 1 view)' : 'No views allocated';
+                btn.disabled = assigned <= 0;
+                btn.onclick = () => consumeForVideo(v._id, v.title, btn, info);
+                card.appendChild(thumb);
+                card.appendChild(title);
+                card.appendChild(info);
+                card.appendChild(btn);
+                container.appendChild(card);
+            });
+            document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
+        }
+
+        function renderPlayerOverlay(embedHtml) {
+            const container = document.getElementById('playerContainer');
+            container.innerHTML = '';
+            const frameWrapper = document.createElement('div');
+            frameWrapper.className = 'player-frame';
+            const overlay = document.createElement('div');
+            overlay.className = 'player-overlay';
+            const btn = document.createElement('button');
+            btn.innerText = 'Play Lesson';
+            btn.onclick = () => {
+                frameWrapper.innerHTML = embedHtml;
+                const blocker = document.createElement('div');
+                blocker.className = 'youtube-blocker';
+                ['top','bottom','left','right'].forEach(pos => {
+                    const edge = document.createElement('div');
+                    edge.className = `youtube-blocker-edge ${pos}`;
+                    blocker.appendChild(edge);
+                });
+                frameWrapper.appendChild(blocker);
+                overlay.style.display = 'none';
+            };
+            overlay.appendChild(btn);
+            container.appendChild(frameWrapper);
+            container.appendChild(overlay);
+        }
+
+        async function consumeForVideo(videoId, title, btn, infoEl) {
+            if((allocations[videoId] || 0) <= 0) return alert('No views allocated for this lesson');
+            btn.disabled = true; btn.innerText = 'Processing...';
+            const res = await apiFetch('/api/student/consume-view-for-video', {
+                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+                body: JSON.stringify({ videoId })
+            });
+            const data = await res.json();
+            if(!res.ok) {
+                alert(data.error || 'Failed to consume view');
+                btn.disabled = false; btn.innerText = 'Watch (use 1 view)';
+                return;
+            }
+            if(data.newToken) localStorage.setItem('token', data.newToken);
+            allocations[videoId] = Math.max((allocations[videoId] || 1) - 1, 0);
+            const remaining = allocations[videoId];
+            btn.innerText = remaining > 0 ? 'Watch (use 1 view)' : 'No views allocated';
+            btn.disabled = remaining <= 0;
+            document.getElementById('videoTitle').innerText = title || 'Lesson';
+            document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
+            infoEl.innerText = `Allocated: ${remaining} view${remaining===1?'':'s'}`;
+            renderPlayerOverlay(data.embedHtml);
+        }
+
+        const changePwdBtn = document.getElementById('changePwdBtn');
+        const changePwdForm = document.getElementById('changePwdForm');
+        const currentPasswordInput = document.getElementById('currentPassword');
+        const newPasswordInput = document.getElementById('newPassword');
+        const submitChangePwdBtn = document.getElementById('submitChangePwdBtn');
+        const changePwdMessage = document.getElementById('changePwdMessage');
+
+        function showChangePwdMessage(text, isError) {
+            changePwdMessage.textContent = text;
+            changePwdMessage.className = isError ? 'change-password-message error' : 'change-password-message success';
+        }
+
+        document.getElementById('logoutLink').onclick = (e) => { e.preventDefault(); localStorage.clear(); window.location.href = '/'; };
+        changePwdBtn.onclick = () => {
+            const isOpen = changePwdForm.classList.toggle('active');
+            changePwdBtn.innerText = isOpen ? 'Hide Password Form' : 'Change Password';
+            if (isOpen) currentPasswordInput.focus();
+        };
+
+        submitChangePwdBtn.onclick = async () => {
+            const currentPassword = currentPasswordInput.value.trim();
+            const newPassword = newPasswordInput.value.trim();
+            if (!currentPassword) return showChangePwdMessage('Enter your current password', true);
+            if (!newPassword || newPassword.length < 4) return showChangePwdMessage('New password must have at least 4 characters', true);
+
+            submitChangePwdBtn.disabled = true;
+            submitChangePwdBtn.innerText = 'Saving...';
+            showChangePwdMessage('', false);
+
+            const res = await apiFetch('/api/auth/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                showChangePwdMessage('Password changed successfully', false);
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+            } else {
+                showChangePwdMessage(data.error || 'Failed to change password', true);
+            }
+
+            submitChangePwdBtn.disabled = false;
+            submitChangePwdBtn.innerText = 'Save Password';
+        };
+
+        async function initPage() {
+            await refreshStudentInfo();
+            await loadVideos();
+        }
+        initPage();
+        window.addEventListener('beforeunload', () => { if(watermarkInterval) clearInterval(watermarkInterval); });
+    </script>
+</body>
+</html>

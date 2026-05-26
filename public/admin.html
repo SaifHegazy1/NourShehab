@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>Admin | ENG NOUR SHEHAB MATH CAPSULE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: #0f172a;
+            font-family: system-ui, sans-serif;
+            padding: 20px
+        }
+
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center
+        }
+
+        .login-modal.active {
+            display: flex
+        }
+
+        .login-card {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #334155
+        }
+
+        .login-card h2 {
+            color: #38bdf8;
+            margin-bottom: 1rem;
+            text-align: center
+        }
+
+        .login-card .form-group {
+            margin-bottom: 1.5rem
+        }
+
+        .login-card label {
+            color: #cbd5e1;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.5rem
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: white
+        }
+
+        .login-card input:focus {
+            border-color: #38bdf8;
+            outline: none
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #0ea5e9;
+            color: white;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        .login-btn:hover {
+            background: #0284c7
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto
+        }
+
+        .header {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 1rem 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #334155;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            cursor: pointer
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #334155;
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: #38bdf8;
+            border-left: 4px solid #0ea5e9;
+            padding-left: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: #cbd5e1
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.6rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            color: white;
+            font-family: inherit;
+        }
+
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        button.danger {
+            background: #ef4444
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0
+        }
+
+        th {
+            background: #0f172a;
+            color: #38bdf8
+        }
+
+        .student-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap
+        }
+
+        .small-input {
+            width: 80px
+        }
+
+        .message {
+            padding: 0.8rem;
+            border-radius: 24px;
+            margin-bottom: 1rem
+        }
+
+        .success {
+            background: #064e3b;
+            color: #4ade80
+        }
+
+        .error {
+            background: #450a0a;
+            color: #f87171
+        }
+    </style>
+    <script src="/api-base.js"></script>
+</head>
+
+<body>
+    <div class="login-modal active" id="loginModal">
+        <div class="login-card">
+            <h2>🔐 Admin Login</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="adminUsername" placeholder="admin" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="admin123">
+            </div>
+            <button class="login-btn" id="loginSubmitBtn">Login</button>
+        </div>
+    </div>
+    <div class="container" id="adminContainer" style="display:none">
+        <div class="header">
+            <h1>📐 MATH CAPSULE | Admin Control</h1><button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+        <div id="messageArea"></div>
+
+        <div class="card">
+            <h2>📹 Default Video Settings</h2>
+            <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text" id="youtubeId"
+                    placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+            <div class="form-group"><label>Video Title</label><input type="text" id="videoTitle"></div>
+            <div class="form-group"><label>Description</label><textarea id="videoDesc" rows="2"></textarea></div>
+            <button id="updateVideoBtn">Save Default Video</button>
+        </div>
+
+        <div class="card">
+            <h2>➕ Add New Video to Library</h2>
+            <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text"
+                    id="newVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+            <div class="form-group"><label>Video Title</label><input type="text" id="newVideoTitle"></div>
+            <div class="form-group"><label>Description</label><textarea id="newVideoDesc" rows="2"></textarea></div>
+            <button id="createVideoBtn">Add Video</button>
+        </div>
+
+        <div class="card">
+            <h2>� Manage Video Library</h2>
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>YouTube ID</th>
+                            <th>Views</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="videosLibraryList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔐 Change Student Password</h2>
+            <div class="form-group"><label>Select Student</label>
+                <select id="passwordStudentSelect">
+                    <option value="">Select a student</option>
+                </select>
+            </div>
+            <div class="form-group"><label>New Password</label><input type="password" id="newStudentPassword"
+                    placeholder="Minimum 4 characters"></div>
+            <button id="changePasswordBtn">Set Password</button>
+        </div>
+
+        <div class="card">
+            <h2>�👩‍🏫 Tutor Profile (About Page)</h2>
+            <div class="form-group"><label>Tutor Name</label><input type="text" id="tutorName"
+                    placeholder="ENG NOUR SHEHAB"></div>
+            <div class="form-group"><label>About Text</label><textarea id="tutorAbout" rows="3"></textarea></div>
+            <div class="form-group"><label>Photo URL</label><input type="text" id="tutorPhotoUrl"
+                    placeholder="https://..."></div>
+            <button id="updateTutorBtn">Update Profile</button>
+        </div>
+
+        <div class="card">
+            <h2>📊 Bulk Add Students (Excel)</h2>
+            <p style="color:#94a3b8; margin-bottom:0.5rem">Columns: username</p>
+            <input type="file" id="excelFile" accept=".xlsx,.xls,.csv">
+            <button id="uploadExcelBtn">Upload & Add</button>
+            <div id="uploadResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>➕ Add Single Student</h2>
+            <div class="form-group"><label>Username</label><input type="text" id="newStudentUsername"
+                    placeholder="Enter student name"></div>
+            <button id="createStudentBtn">Create Student</button>
+            <div id="createResult"></div>
+        </div>
+
+        <div class="card">
+            <h2>➕ Assign Views to Selected Students/Videos</h2>
+            <div class="form-group"><label>Select Students</label>
+                <select id="viewStudentSelect" multiple size="6"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple students.</small>
+            </div>
+            <div class="form-group"><label>Views to Add</label><input type="number" id="viewsToAdd" min="1"></div>
+            <div class="form-group"><label>Select Videos</label>
+                <select id="videoSelect" multiple size="6"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple videos.</small>
+            </div>
+            <button id="addViewsBtn">Assign Views</button>
+        </div>
+
+        <div class="card">
+            <h2>👥 Students List</h2>
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Unique Code</th>
+                            <th>Allocations</th>
+                            <th>Password Set</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extract YouTube video ID from URL or ID
+        function extractYouTubeId(input) {
+            if (!input) return '';
+            const trimmed = input.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+
+            const regex = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/;
+            const match = trimmed.match(regex);
+            if (match) return match[1];
+
+            return trimmed;
+        }
+
+        // Validate YouTube ID format
+        function isValidYouTubeId(id) {
+            return /^[a-zA-Z0-9_-]{11}$/.test(id);
+        }
+
+        let adminToken = localStorage.getItem('adminToken');
+        const loginModal = document.getElementById('loginModal');
+        const adminContainer = document.getElementById('adminContainer');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+
+        // Handle login
+        async function handleLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+
+            if (!username || !password) {
+                alert('Enter username and password');
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/api/auth/admin-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.token) {
+                    localStorage.setItem('adminToken', data.token);
+                    adminToken = data.token;
+                    loginModal.classList.remove('active');
+                    adminContainer.style.display = 'block';
+                    loadAll();
+                } else {
+                    alert('Login failed: ' + (data.error || 'Invalid credentials'));
+                    document.getElementById('adminPassword').value = '';
+                }
+            } catch (err) {
+                alert('Login error: ' + err.message);
+            }
+        }
+
+        loginSubmitBtn.onclick = handleLogin;
+        document.getElementById('adminUsername').addEventListener('keypress', e => {
+            if (e.key === 'Enter') document.getElementById('adminPassword').focus();
+        });
+        document.getElementById('adminPassword').addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        if (adminToken) {
+            loginModal.classList.remove('active');
+            adminContainer.style.display = 'block';
+            loadAll();
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('adminToken');
+            adminToken = null;
+            loginModal.classList.add('active');
+            adminContainer.style.display = 'none';
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function getAuthHeaders() {
+            return { 'Authorization': `Bearer ${adminToken}` };
+        }
+
+        async function fetchAdmin(url, options = {}) {
+            options.headers = { ...(options.headers || {}), ...getAuthHeaders() };
+            const res = await fetch(apiUrl(url), options);
+            if (res.status === 401 || res.status === 403) {
+                logoutAdmin();
+                showMessage('Session expired or invalid admin token. Please log in again.', true);
+                throw new Error('Invalid admin token');
+            }
+            return res;
+        }
+
+        async function loadAll() {
+            try {
+                await loadVideoSettings();
+                await loadTutorProfile();
+                await loadStudents();
+                await loadVideos();
+            } catch (err) {
+                console.error('loadAll error', err);
+            }
+        }
+        async function loadVideos() {
+            const r = await fetchAdmin('/api/admin/videos');
+            if (!r.ok) { showMessage('Unable to load videos. Please refresh or re-login.', true); return; }
+            const videos = await r.json();
+            const sel = document.getElementById('videoSelect');
+            if (!sel) return;
+            sel.innerHTML = '';
+            videos.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v._id;
+                o.textContent = `${v.title} (${v.viewCount || 0} views)`;
+                sel.appendChild(o);
+            });
+            renderVideosLibrary(videos);
+        }
+        function renderVideosLibrary(videos) {
+            const tbody = document.getElementById('videosLibraryList');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            videos.forEach(v => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = v.title || 'Untitled';
+                row.insertCell(1).textContent = v.youtubeId;
+                row.insertCell(2).textContent = v.viewCount || 0;
+                const actionsCell = row.insertCell(3);
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => editVideo(v));
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => deleteVideo(v._id));
+                actionsCell.appendChild(editBtn);
+                actionsCell.appendChild(deleteBtn);
+            });
+        }
+        async function editVideo(video) {
+            const newTitle = prompt('Enter new title for this video:', video.title || '');
+            if (newTitle === null) return;
+            const trimmedTitle = newTitle.trim();
+            if (!trimmedTitle) { showMessage('Video title cannot be empty', true); return; }
+            const r = await fetchAdmin('/api/admin/update-video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoId: video._id, youtubeId: video.youtubeId, title: trimmedTitle, description: video.description || '' })
+            });
+            const data = await r.json();
+            if (r.ok) { showMessage('Video title updated', false); loadVideos(); } else { showMessage(data.error || 'Failed to update video', true); }
+        }
+        async function loadVideoSettings() { const r = await fetchAdmin('/api/admin/video-settings'); const d = await r.json(); if (d) { document.getElementById('youtubeId').value = d.youtubeId || ''; document.getElementById('videoTitle').value = d.title || ''; document.getElementById('videoDesc').value = d.description || ''; } }
+        async function loadTutorProfile() { const r = await apiFetch('/api/tutor/profile'); const d = await r.json(); document.getElementById('tutorName').value = d.name || ''; document.getElementById('tutorAbout').value = d.about || ''; document.getElementById('tutorPhotoUrl').value = d.photoUrl || ''; }
+        async function loadStudents() { const r = await fetchAdmin('/api/admin/students'); const students = await r.json(); if (!Array.isArray(students)) { showMessage('Unable to load students.', true); return; } const tbody = document.getElementById('studentsList'); const studentSelect = document.getElementById('viewStudentSelect'); if (studentSelect) { studentSelect.innerHTML = ''; students.forEach(s => { const opt = document.createElement('option'); opt.value = s._id; opt.textContent = `${s.username} (${s.uniqueCode})`; studentSelect.appendChild(opt); }); } tbody.innerHTML = ''; students.forEach(s => { const totalViews = (s.perVideoViews || []).reduce((sum, p) => sum + (p.views || 0), 0); const row = tbody.insertRow(); row.insertCell(0).textContent = s.username; row.insertCell(1).textContent = s.uniqueCode; row.insertCell(2).textContent = `${(s.perVideoViews || []).length} videos, ${totalViews} views`; row.insertCell(3).textContent = s.passwordHash ? '✅ Yes' : '❌ No'; const cell = row.insertCell(4); const input = document.createElement('input'); input.type = 'number'; input.className = 'small-input'; input.placeholder = 'Add'; input.min = '1'; input.id = `views-${s._id}`; const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '+'; addBtn.addEventListener('click', () => addViews(s._id, input.id)); const deleteBtn = document.createElement('button'); deleteBtn.type = 'button'; deleteBtn.className = 'danger'; deleteBtn.textContent = 'Del'; deleteBtn.addEventListener('click', () => deleteStudent(s.username)); cell.appendChild(input); cell.appendChild(addBtn); cell.appendChild(deleteBtn); }); }
+        window.addViews = async (studentId, inputId) => { const inp = document.getElementById(inputId); if (!inp) { showMessage('Unable to locate student view input', true); return; } const val = parseInt(inp.value, 10); if (Number.isNaN(val) || val < 1) { showMessage('Enter a valid number of views to add', true); return; } try { const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId, videoId: document.getElementById('videoSelect').value, viewsToAdd: val }) }); const data = await r.json(); if (r.ok) { showMessage('Per-video views added', false); loadStudents(); } else showMessage(data.error || 'Failed to add per-video views', true); } catch (err) { showMessage('Network error while adding views', true); console.error(err); } };
+        window.deleteStudent = async (username) => { if (!confirm(`Delete ${username}?`)) return; const r = await fetchAdmin(`/api/admin/student/${username}`, { method: 'DELETE' }); if (r.ok) { showMessage('Student deleted', false); loadStudents(); } else { const data = await r.json(); showMessage(data.error || 'Failed to delete student', true); } };
+        async function deleteVideo(videoId) {
+            if (!confirm('Delete this video from the library?')) return;
+            const r = await fetchAdmin(`/api/admin/video/${videoId}`, { method: 'DELETE' });
+            if (r.ok) {
+                showMessage('Video deleted from library', false);
+                loadVideos();
+                loadStudents();
+            } else {
+                const data = await r.json();
+                showMessage(data.error || 'Failed to delete video', true);
+            }
+        }
+        document.getElementById('updateVideoBtn').onclick = async () => { const videoInput = document.getElementById('youtubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('videoTitle').value, description: document.getElementById('videoDesc').value }; const r = await fetchAdmin('/api/admin/video-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { document.getElementById('youtubeId').value = videoId; showMessage(`✅ Default video saved! ID: ${videoId}`, false); } else { const err = await r.json(); showMessage(err.error || 'Error updating video', true); } };
+        document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value }; const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
+        document.getElementById('updateTutorBtn').onclick = async () => { const data = { name: document.getElementById('tutorName').value, about: document.getElementById('tutorAbout').value, photoUrl: document.getElementById('tutorPhotoUrl').value }; const r = await fetchAdmin('/api/admin/tutor-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) showMessage('Tutor profile updated', false); else { const err = await r.json(); showMessage(err.error || 'Error', true); } };
+        document.getElementById('uploadExcelBtn').onclick = async () => { const file = document.getElementById('excelFile').files[0]; if (!file) return; const fd = new FormData(); fd.append('excelFile', file); const r = await fetchAdmin('/api/admin/upload-students', { method: 'POST', body: fd }); const data = await r.json(); showMessage(`Added ${data.added}, skipped ${data.skipped}`, !data.success); if (data.success) loadStudents(); };
+        document.getElementById('createStudentBtn').onclick = async () => { const username = document.getElementById('newStudentUsername').value.trim(); if (!username) { showMessage('Enter username', true); return; } const r = await fetchAdmin('/api/admin/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }); const data = await r.json(); if (r.ok) { showMessage(`Student created! Code: ${data.student.uniqueCode}`, false); document.getElementById('newStudentUsername').value = ''; loadStudents(); } else showMessage(data.error || 'Failed', true); };
+        document.getElementById('addViewsBtn').onclick = async () => {
+            const studentSelect = document.getElementById('viewStudentSelect');
+            const videoSelect = document.getElementById('videoSelect');
+            const studentIds = Array.from(studentSelect.selectedOptions).map(o => o.value);
+            const videoIds = Array.from(videoSelect.selectedOptions).map(o => o.value);
+            const views = parseInt(document.getElementById('viewsToAdd').value, 10);
+            if (studentIds.length === 0) { showMessage('Please select at least one student', true); return; }
+            if (videoIds.length === 0) { showMessage('Please select at least one video', true); return; }
+            if (Number.isNaN(views) || views < 1) { showMessage('Please enter a valid number of views to add', true); return; }
+            try {
+                const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentIds, videoIds, viewsToAdd: views }) });
+                const data = await r.json();
+                if (r.ok) { showMessage(`Added ${views} view(s) to ${studentIds.length} student(s) and ${videoIds.length} video(s)`, false); loadStudents(); studentSelect.selectedIndex = -1; videoSelect.selectedIndex = -1; document.getElementById('viewsToAdd').value = ''; } else showMessage(data.error || 'Failed to add per-video views', true);
+            } catch (err) {
+                showMessage('Network or server error while adding views', true);
+                console.error(err);
+            }
+        };
+        document.getElementById('logoutBtn').onclick = () => { localStorage.removeItem('adminToken'); adminToken = null; loginModal.classList.add('active'); adminContainer.style.display = 'none'; document.getElementById('adminUsername').value = ''; document.getElementById('adminPassword').value = ''; };
+        function showMessage(msg, isErr) { const div = document.getElementById('messageArea'); div.innerHTML = `<div class="message ${isErr ? 'error' : 'success'}">${msg}</div>`; setTimeout(() => { if (div.innerHTML.includes(msg)) div.innerHTML = ''; }, 4000); }
+    </script>
+</body>
+
+</html>

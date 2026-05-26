@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <title>About | ENG NOUR SHEHAB MATH CAPSULE</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(145deg, #0b1120 0%, #111827 100%);
+            min-height: 100vh;
+        }
+        .navbar{
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+            position: sticky;
+            top: 0;
+        }
+        .nav-container{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo{
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .nav-links{
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-links a{
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-links a:hover, .nav-links a.active{
+            color: #38bdf8;
+        }
+        .container{
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .profile-header{
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-photo{
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #38bdf8;
+            box-shadow: 0 0 20px rgba(56,189,248,0.3);
+            margin-bottom: 1rem;
+        }
+        .tutor-name{
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .capsule-tag{
+            display: inline-block;
+            background: rgba(56,189,248,0.2);
+            border-radius: 100px;
+            padding: 0.2rem 1rem;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            margin-top: 0.5rem;
+        }
+        .about-text{
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #cbd5e1;
+            margin-top: 1.5rem;
+            white-space: pre-wrap;
+        }
+        .back-btn{
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.6rem 1.5rem;
+            background: rgba(56,189,248,0.1);
+            color: #38bdf8;
+            border-radius: 100px;
+            text-decoration: none;
+            border: 1px solid rgba(56,189,248,0.4);
+            transition: all 0.2s;
+        }
+        .back-btn:hover{
+            background: #0ea5e9;
+            color: white;
+        }
+        footer{
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+        @media (max-width:640px){
+            .tutor-name{font-size: 1.6rem;}
+            .container{margin: 1rem; padding: 1.5rem;}
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-container">
+            <div class="logo">⚡ ENG NOUR SHEHAB | MATH CAPSULE</div>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/about" class="active">About</a>
+                <a href="/student">Student Login</a>
+                <a href="/admin">Admin</a>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="profile-header">
+            <img id="tutorPhoto" class="profile-photo" src="/hero.jpg" alt="Eng Nour Shehab">
+            <h1 id="tutorName" class="tutor-name">ENG NOUR SHEHAB</h1>
+            <div class="capsule-tag">📐 MATH CAPSULE FOUNDER</div>
+            <div class="social-links" style="margin-top:0.8rem">
+                <a href="https://www.facebook.com/nour.shehab.07" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;margin-right:0.8rem;text-decoration:none">Facebook</a>
+                <a href="https://www.instagram.com/nour_shehab04?fbclid=IwY2xjawSCKHFleHRuA2FlbQIxMABicmlkETFjNmxZRzUxVGx6VE45clFlc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHge_J2yNEyinAfa9bvCxo5O-vV8udwFWhV48zdi4D_1Vo-hUd0QwwcLWgVuH_aem_bZ5fQjYOhFYL7mn4niTfOg" target="_blank" rel="noopener noreferrer" style="color:#38bdf8;text-decoration:none">Instagram</a>
+            </div>
+        </div>
+        <div id="tutorAbout" class="about-text">He is a Mechanical Engineer who masters teaching math.</div>
+        <a href="/" class="back-btn">← Back to Home</a>
+    </div>
+    <footer>
+        <p>© 2025 ENG NOUR SHEHAB • MATH CAPSULE — Precision learning for engineers</p>
+    </footer>
+    <script src="/api-base.js"></script>
+    <script>
+        apiFetch('/api/tutor/profile')
+            .then(res => res.json())
+            .then(profile => {
+                document.getElementById('tutorName').innerText = profile.name || 'ENG NOUR SHEHAB';
+                document.getElementById('tutorAbout').innerText = profile.about || 'Founder of Math Capsule, dedicated to making advanced mathematics accessible and engaging for engineering students worldwide.';
+                if (profile.photoUrl && profile.photoUrl.trim()) {
+                    const img = document.getElementById('tutorPhoto');
+                    img.src = profile.photoUrl;
+                    img.style.display = 'block';
+                }
+            })
+            .catch(() => document.getElementById('tutorAbout').innerText = 'Unable to load profile. Please refresh.');
+    </script>
+</body>
+</html>
