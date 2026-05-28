@@ -80,6 +80,7 @@ const quizSchema = new mongoose.Schema({
 const folderSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     parentFolder: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', default: null },
+    folderType: { type: String, enum: ['video', 'quiz'], default: 'video' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -432,9 +433,12 @@ app.get('/api/admin/folders/tree', authenticateJWT, requireAdmin, async (req, re
 
 app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) => {
     try {
-        const { name, parentFolderId } = req.body;
+        const { name, parentFolderId, folderType = 'video' } = req.body;
         if (!name || typeof name !== 'string' || !name.trim()) {
             return res.status(400).json({ error: 'Folder name is required' });
+        }
+        if (!['video', 'quiz'].includes(folderType)) {
+            return res.status(400).json({ error: 'Invalid folder type. Use "video" or "quiz".' });
         }
         
         let parentFolder = null;
@@ -445,6 +449,10 @@ app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) =
             parentFolder = await Folder.findById(parentFolderId);
             if (!parentFolder) {
                 return res.status(404).json({ error: 'Parent folder not found' });
+            }
+            const parentType = parentFolder.folderType || 'video';
+            if (parentType !== folderType) {
+                return res.status(400).json({ error: 'Folder type must match parent folder type' });
             }
         }
         
@@ -463,10 +471,25 @@ app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) =
 app.post('/api/admin/folders/:folderId', authenticateJWT, requireAdmin, async (req, res) => {
     try {
         const { folderId } = req.params;
-        const { name, parentFolderId } = req.body;
+        const { name, parentFolderId, folderType } = req.body;
         if (!mongoose.Types.ObjectId.isValid(folderId)) return res.status(400).json({ error: 'Invalid folder ID' });
         const folder = await Folder.findById(folderId);
         if (!folder) return res.status(404).json({ error: 'Folder not found' });
+        const currentType = folder.folderType || 'video';
+        let updatedType = currentType;
+        if (folderType !== undefined) {
+            if (!['video', 'quiz'].includes(folderType)) {
+                return res.status(400).json({ error: 'Invalid folder type. Use "video" or "quiz".' });
+            }
+            updatedType = folderType;
+            if (folderType !== currentType) {
+                const childIds = await collectDescendantFolderIds(folderId);
+                const mismatchChild = await Folder.findOne({ _id: { $in: childIds }, folderType: { $exists: true, $ne: folderType } });
+                if (mismatchChild) {
+                    return res.status(400).json({ error: 'Cannot change folder type while child folders have a different type' });
+                }
+            }
+        }
         if (name !== undefined) {
             if (!name || !name.trim()) return res.status(400).json({ error: 'Folder name cannot be empty' });
             folder.name = name.trim();
@@ -477,6 +500,10 @@ app.post('/api/admin/folders/:folderId', authenticateJWT, requireAdmin, async (r
             if (parentFolderId) {
                 const parentFolder = await Folder.findById(parentFolderId);
                 if (!parentFolder) return res.status(404).json({ error: 'Parent folder not found' });
+                const parentType = parentFolder.folderType || 'video';
+                if (parentType !== updatedType) {
+                    return res.status(400).json({ error: 'Folder type must match parent folder type' });
+                }
                 const descendants = await collectDescendantFolderIds(folderId);
                 if (descendants.find(id => id.toString() === parentFolderId.toString())) {
                     return res.status(400).json({ error: 'Cannot move folder under its own child' });
@@ -485,6 +512,9 @@ app.post('/api/admin/folders/:folderId', authenticateJWT, requireAdmin, async (r
             } else {
                 folder.parentFolder = null;
             }
+        }
+        if (folderType !== undefined) {
+            folder.folderType = updatedType;
         }
         await folder.save();
         res.json({ success: true, folder });
@@ -517,8 +547,8 @@ app.post('/api/admin/videos/assign-folders', authenticateJWT, requireAdmin, asyn
         const validVideoIds = videoIds.filter(id => mongoose.Types.ObjectId.isValid(id));
         if (validVideoIds.length !== videoIds.length) return res.status(400).json({ error: 'One or more invalid videoIds' });
         const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
-        const folders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
-        if (validFolderIds.length !== folders.length) return res.status(400).json({ error: 'One or more invalid folderIds' });
+        const folders = await Folder.find({ _id: { $in: validFolderIds }, $or: [{ folderType: 'video' }, { folderType: { $exists: false } }] }).select('_id');
+        if (validFolderIds.length !== folders.length) return res.status(400).json({ error: 'One or more invalid or non-video folderIds' });
         await Promise.all(validVideoIds.map(async videoId => {
             const video = await Video.findById(videoId);
             if (!video) return;
@@ -534,7 +564,7 @@ app.post('/api/admin/videos/assign-folders', authenticateJWT, requireAdmin, asyn
 
 app.get('/api/student/folders', authenticateJWT, requireStudent, async (req, res) => {
     try {
-        const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+        const folders = await Folder.find({ $or: [{ folderType: 'video' }, { folderType: { $exists: false } }] }).sort({ createdAt: 1 }).lean();
         let videos = await Video.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
         videos = videos.map(video => ({
             ...video,
@@ -550,7 +580,7 @@ app.get('/api/student/folders', authenticateJWT, requireStudent, async (req, res
 
 app.get('/api/student/quizzes', authenticateJWT, requireStudent, async (req, res) => {
     try {
-        const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+        const folders = await Folder.find({ folderType: 'quiz' }).sort({ createdAt: 1 }).lean();
         const quizzes = await Quiz.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
         const tree = buildFolderTreeForQuizzes(folders, quizzes);
         res.json(tree);
@@ -647,9 +677,9 @@ app.post('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) =>
         }
 
         if (folderIds.length > 0) {
-            const foundFolders = await Folder.find({ _id: { $in: folderIds } }).select('_id');
+            const foundFolders = await Folder.find({ _id: { $in: folderIds }, $or: [{ folderType: 'video' }, { folderType: { $exists: false } }] }).select('_id');
             if (foundFolders.length !== folderIds.length) {
-                return res.status(400).json({ error: 'One or more folders not found' });
+                return res.status(400).json({ error: 'One or more folders not found or not video folders' });
             }
         }
 
@@ -710,9 +740,9 @@ app.post('/api/admin/update-video', authenticateJWT, requireAdmin, async (req, r
                 return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
             }
             if (validFolderIds.length > 0) {
-                const foundFolders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
+                const foundFolders = await Folder.find({ _id: { $in: validFolderIds }, $or: [{ folderType: 'video' }, { folderType: { $exists: false } }] }).select('_id');
                 if (foundFolders.length !== validFolderIds.length) {
-                    return res.status(400).json({ error: 'One or more folders not found' });
+                    return res.status(400).json({ error: 'One or more folders not found or not video folders' });
                 }
             }
             video.folders = validFolderIds;
@@ -793,9 +823,9 @@ app.post('/api/admin/quizzes', authenticateJWT, requireAdmin, async (req, res) =
             return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
         }
         if (validFolderIds.length > 0) {
-            const foundFolders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
+            const foundFolders = await Folder.find({ _id: { $in: validFolderIds }, folderType: 'quiz' }).select('_id');
             if (foundFolders.length !== validFolderIds.length) {
-                return res.status(400).json({ error: 'One or more folders not found' });
+                return res.status(400).json({ error: 'One or more folders not found or not quiz folders' });
             }
         }
 
@@ -805,6 +835,64 @@ app.post('/api/admin/quizzes', authenticateJWT, requireAdmin, async (req, res) =
             link: normalizedLink,
             folders: validFolderIds
         });
+        res.json({ success: true, quiz });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/admin/quizzes/:quizId', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { quizId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(quizId)) return res.status(400).json({ error: 'Invalid quiz ID' });
+        const result = await Quiz.findByIdAndDelete(quizId);
+        if (!result) return res.status(404).json({ error: 'Quiz not found' });
+        res.json({ success: true, message: 'Quiz deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/admin/quizzes/:quizId', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { quizId } = req.params;
+        const { title, description, link, folderIds } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(quizId)) return res.status(400).json({ error: 'Invalid quiz ID' });
+        const quiz = await Quiz.findById(quizId);
+        if (!quiz) return res.status(404).json({ error: 'Quiz not found' });
+
+        if (title !== undefined) {
+            if (!title || !title.trim()) return res.status(400).json({ error: 'Quiz title is required' });
+            quiz.title = title.trim();
+        }
+        if (description !== undefined) {
+            quiz.description = description.toString().trim();
+        }
+        if (link !== undefined) {
+            let normalizedLink = link.trim();
+            if (!/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(normalizedLink)) {
+                normalizedLink = `https://${normalizedLink}`;
+            }
+            try { new URL(normalizedLink); } catch { return res.status(400).json({ error: 'Invalid quiz link URL' }); }
+            quiz.link = normalizedLink;
+        }
+        if (folderIds !== undefined) {
+            const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
+            if (!Array.isArray(folderIds) || validFolderIds.length !== folderIds.length) {
+                return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
+            }
+            if (validFolderIds.length > 0) {
+                const foundFolders = await Folder.find({ _id: { $in: validFolderIds }, folderType: 'quiz' }).select('_id');
+                if (foundFolders.length !== validFolderIds.length) {
+                    return res.status(400).json({ error: 'One or more folders not found or not quiz folders' });
+                }
+            }
+            quiz.folders = validFolderIds;
+        }
+        quiz.updatedAt = new Date();
+        await quiz.save();
         res.json({ success: true, quiz });
     } catch (err) {
         console.error(err);

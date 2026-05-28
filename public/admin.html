@@ -312,6 +312,12 @@
         <div class="card">
             <h2>📁 Folder Library</h2>
             <div class="form-group"><label>Folder Name</label><input type="text" id="newFolderName" placeholder="New folder name"></div>
+            <div class="form-group"><label>Folder Type</label>
+                <select id="newFolderType">
+                    <option value="video">Video Folder</option>
+                    <option value="quiz">Quiz Folder</option>
+                </select>
+            </div>
             <div class="form-group"><label>Parent Folder (optional)</label>
                 <select id="parentFolderSelect"><option value="">Root folder</option></select>
             </div>
@@ -638,33 +644,45 @@
             const assignFolderSelect = document.getElementById('assignFolderSelect');
             const newVideoFolderSelect = document.getElementById('newVideoFolderSelect');
             const folderTreeContainer = document.getElementById('folderTreeContainer');
+            const editVideoFolderSelect = document.getElementById('editVideoFolderSelect');
+            const newQuizFolderSelect = document.getElementById('newQuizFolderSelect');
+            const editQuizFolderSelect = document.getElementById('editQuizFolderSelect');
             folderSelect.innerHTML = '<option value="">Root folder</option>';
             assignFolderSelect.innerHTML = '<option value="">Root (clear assignment)</option>';
             if (newVideoFolderSelect) {
                 newVideoFolderSelect.innerHTML = '<option value="" disabled>None / Root</option>';
             }
-            const editVideoFolderSelect = document.getElementById('editVideoFolderSelect');
             if (editVideoFolderSelect) {
                 editVideoFolderSelect.innerHTML = '<option value="" disabled>Select folders for this video</option>';
             }
-            const newQuizFolderSelect = document.getElementById('newQuizFolderSelect');
             if (newQuizFolderSelect) {
                 newQuizFolderSelect.innerHTML = '<option value="" disabled>None / Root</option>';
             }
+            if (editQuizFolderSelect) {
+                editQuizFolderSelect.innerHTML = '<option value="" disabled>Select folders for this quiz</option>';
+            }
             data.folders.forEach(folder => {
+                const folderType = folder.folderType || 'video';
                 const option = document.createElement('option');
                 option.value = folder._id;
-                option.textContent = folder.name;
+                option.textContent = `${folder.name} (${folderType})`;
                 folderSelect.appendChild(option);
-                assignFolderSelect.appendChild(option.cloneNode(true));
-                if (newVideoFolderSelect) {
-                    newVideoFolderSelect.appendChild(option.cloneNode(true));
+                if (folderType === 'video') {
+                    assignFolderSelect.appendChild(option.cloneNode(true));
+                    if (newVideoFolderSelect) {
+                        newVideoFolderSelect.appendChild(option.cloneNode(true));
+                    }
+                    if (editVideoFolderSelect) {
+                        editVideoFolderSelect.appendChild(option.cloneNode(true));
+                    }
                 }
-                if (editVideoFolderSelect) {
-                    editVideoFolderSelect.appendChild(option.cloneNode(true));
-                }
-                if (newQuizFolderSelect) {
-                    newQuizFolderSelect.appendChild(option.cloneNode(true));
+                if (folderType === 'quiz') {
+                    if (newQuizFolderSelect) {
+                        newQuizFolderSelect.appendChild(option.cloneNode(true));
+                    }
+                    if (editQuizFolderSelect) {
+                        editQuizFolderSelect.appendChild(option.cloneNode(true));
+                    }
                 }
             });
             renderFolderTree(data.folders, folderTreeContainer);
@@ -677,13 +695,14 @@
                     const parent = f.parentFolder ? f.parentFolder.toString ? f.parentFolder.toString() : '' : '';
                     return parent === (parentId ? parentId.toString ? parentId.toString() : parentId : '');
                 }).forEach(folder => {
+                    const folderType = folder.folderType || 'video';
                     const row = document.createElement('div');
                     row.style.display = 'flex';
                     row.style.justifyContent = 'space-between';
                     row.style.alignItems = 'center';
                     row.style.padding = '0.4rem 0';
                     row.style.paddingLeft = `${level * 16}px`;
-                    row.innerHTML = `<strong>${folder.name}</strong>`;
+                    row.innerHTML = `<strong>${folder.name}</strong> <span style="color:#94a3b8; font-size:0.85rem">[${folderType}]</span>`;
                     const actions = document.createElement('div');
                     const editBtn = document.createElement('button');
                     editBtn.type = 'button';
@@ -772,7 +791,7 @@
             if (!r.ok) {
                 const tr = table.insertRow();
                 const cell = tr.insertCell(0);
-                cell.colSpan = 4;
+                cell.colSpan = 5;
                 cell.textContent = 'Unable to load quizzes';
                 cell.style.color = '#f87171';
                 return;
@@ -781,7 +800,7 @@
             if (!Array.isArray(quizzes) || quizzes.length === 0) {
                 const tr = table.insertRow();
                 const cell = tr.insertCell(0);
-                cell.colSpan = 4;
+                cell.colSpan = 5;
                 cell.textContent = 'No quizzes have been added yet.';
                 cell.style.color = '#94a3b8';
                 return;
@@ -798,6 +817,18 @@
                 linkCell.appendChild(link);
                 row.insertCell(2).textContent = Array.isArray(q.folders) && q.folders.length > 0 ? q.folders.map(f => f.name).join(', ') : 'Root';
                 row.insertCell(3).textContent = new Date(q.createdAt).toLocaleDateString();
+                const actionCell = row.insertCell(4);
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => editQuiz(q));
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => deleteQuiz(q._id));
+                actionCell.appendChild(editBtn);
+                actionCell.appendChild(deleteBtn);
             });
         }
 
@@ -824,6 +855,70 @@
                 await loadQuizzes();
             } else {
                 showMessage(data.error || 'Error adding quiz', true);
+            }
+        }
+
+        function editQuiz(quiz) {
+            const editCard = document.getElementById('editQuizCard');
+            editCard.style.display = 'block';
+            document.getElementById('editQuizId').value = quiz._id;
+            document.getElementById('editQuizTitle').value = quiz.title || '';
+            document.getElementById('editQuizDescription').value = quiz.description || '';
+            document.getElementById('editQuizLink').value = quiz.link || '';
+            const folderSelect = document.getElementById('editQuizFolderSelect');
+            if (folderSelect) {
+                const selectedIds = Array.isArray(quiz.folders) ? quiz.folders.map(f => f._id.toString()) : [];
+                Array.from(folderSelect.options).forEach(opt => {
+                    opt.selected = selectedIds.includes(opt.value);
+                });
+            }
+        }
+
+        function cancelEditQuiz() {
+            const editCard = document.getElementById('editQuizCard');
+            editCard.style.display = 'none';
+            document.getElementById('editQuizId').value = '';
+            document.getElementById('editQuizTitle').value = '';
+            document.getElementById('editQuizDescription').value = '';
+            document.getElementById('editQuizLink').value = '';
+            const folderSelect = document.getElementById('editQuizFolderSelect');
+            if (folderSelect) Array.from(folderSelect.options).forEach(opt => opt.selected = false);
+        }
+
+        async function saveEditedQuiz() {
+            const quizId = document.getElementById('editQuizId').value;
+            const title = document.getElementById('editQuizTitle').value.trim();
+            const description = document.getElementById('editQuizDescription').value.trim();
+            const link = document.getElementById('editQuizLink').value.trim();
+            const folderSelect = document.getElementById('editQuizFolderSelect');
+            const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
+            if (!quizId) { showMessage('No quiz selected to edit', true); return; }
+            if (!title) { showMessage('Quiz title cannot be empty', true); return; }
+            if (!link) { showMessage('Quiz link cannot be empty', true); return; }
+            const r = await fetchAdmin(`/api/admin/quizzes/${quizId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, link, folderIds })
+            });
+            const data = await r.json();
+            if (r.ok) {
+                showMessage('✅ Quiz updated successfully', false);
+                cancelEditQuiz();
+                await loadQuizzes();
+            } else {
+                showMessage(data.error || 'Error updating quiz', true);
+            }
+        }
+
+        async function deleteQuiz(quizId) {
+            if (!confirm('Delete this quiz from the library?')) return;
+            const r = await fetchAdmin(`/api/admin/quizzes/${quizId}`, { method: 'DELETE' });
+            const data = await r.json();
+            if (r.ok) {
+                showMessage('Quiz deleted', false);
+                await loadQuizzes();
+            } else {
+                showMessage(data.error || 'Failed to delete quiz', true);
             }
         }
 
@@ -946,8 +1041,11 @@
         document.getElementById('updateVideoBtn').onclick = async () => { const videoInput = document.getElementById('youtubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('videoTitle').value, description: document.getElementById('videoDesc').value }; const r = await fetchAdmin('/api/admin/video-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { document.getElementById('youtubeId').value = videoId; showMessage(`✅ Default video saved! ID: ${videoId}`, false); } else { const err = await r.json(); showMessage(err.error || 'Error updating video', true); } };
         document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const folderSelect = document.getElementById('newVideoFolderSelect'); const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : []; const materials = gatherMaterials('newVideoMaterialsContainer'); const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value, materials, folderIds }; if (materials.length > 0) { data.materialTitle = materials[0].title || ''; data.materialLink = materials[0].link || ''; } const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; if (folderSelect) folderSelect.selectedIndex = -1; resetMaterials('newVideoMaterialsContainer'); loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
         document.getElementById('createQuizBtn').onclick = createQuiz;
+        document.getElementById('saveEditedQuizBtn').onclick = saveEditedQuiz;
+        document.getElementById('cancelEditQuizBtn').onclick = cancelEditQuiz;
         document.getElementById('createFolderBtn').onclick = async () => {
             const name = document.getElementById('newFolderName').value.trim();
+            const folderType = document.getElementById('newFolderType').value || 'video';
             let parentFolderId = document.getElementById('parentFolderSelect').value;
             parentFolderId = parentFolderId ? parentFolderId : null;
             if (!name) { showMessage('Enter folder name', true); return; }
@@ -955,7 +1053,7 @@
                 const r = await fetchAdmin('/api/admin/folders', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, parentFolderId })
+                    body: JSON.stringify({ name, folderType, parentFolderId })
                 });
                 const data = await r.json().catch(() => null);
                 if (r.ok) {

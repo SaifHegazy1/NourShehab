@@ -197,6 +197,22 @@
         .quiz-info-panel a:hover{
             text-decoration:underline;
         }
+        .quiz-info-panel button{
+            background: #3b82f6;
+            border: none;
+            color: #ffffff;
+            padding: 0.95rem 1.6rem;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .quiz-info-panel button:hover{
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
         .change-password-panel{
             display: none;
             background: #0f172a;
@@ -686,11 +702,12 @@
             panel.style.display = 'block';
         }
 
-        function selectWatchTab() {
+        async function selectWatchTab() {
             document.getElementById('watchTabBtn').classList.add('active');
             document.getElementById('quizTabBtn').classList.remove('active');
             document.getElementById('watchPanel').style.display = 'block';
             document.getElementById('quizPanel').style.display = 'none';
+            await loadVideos();
         }
 
         async function selectQuizTab() {
