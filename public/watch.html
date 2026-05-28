@@ -52,6 +52,14 @@
         .player-overlay button:hover{transform:translateY(-2px);filter:brightness(1.05);}
         .video-wrapper .fullscreen-btn{position:absolute;top:16px;right:16px;z-index:30;}
         .video-wrapper .player-watermark{position:absolute;top:16px;left:16px;z-index:40;pointer-events:none;}
+        .folder-card{width:100%;background:#09101d;border:1px solid #0f172a;border-radius:16px;padding:0.9rem;margin-bottom:0.85rem;}
+        .folder-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;cursor:pointer;}
+        .folder-title{color:#e2e8f0;font-weight:700;font-size:0.98rem;}
+        .folder-meta{color:#94a3b8;font-size:0.85rem;}
+        .folder-toggle{background:transparent;border:1px solid #334155;color:#cbd5e1;padding:0.35rem 0.9rem;border-radius:999px;cursor:pointer;transition:all 0.2s;}
+        .folder-toggle:hover{border-color:#38bdf8;color:#38bdf8;}
+        .folder-content{margin-top:0.75rem;display:none;}
+        .folder-empty{color:#94a3b8;font-size:0.9rem;padding:0.75rem 0.5rem;background:#0b1524;border-radius:12px;}
         .video-wrapper:fullscreen, .video-wrapper:-webkit-full-screen{padding-bottom:0;height:100%;width:100%;max-width:none;max-height:none;border-radius:0;}
         .video-wrapper:fullscreen #playerContainer, .video-wrapper:-webkit-full-screen #playerContainer{height:100%;}
         .video-wrapper:fullscreen .player-overlay, .video-wrapper:-webkit-full-screen .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;}
@@ -145,13 +153,102 @@
         .corner-tr{top:20px;right:20px}
         .corner-bl{bottom:20px;left:20px}
         .corner-br{bottom:20px;right:20px}
+        .player-controls{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            padding: 0.75rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            z-index: 25;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            flex-wrap: wrap;
+            pointer-events: none;
+        }
+        .player-controls.visible{
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .iframe-blocker{
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            pointer-events: auto;
+            background: transparent;
+            display: none;
+        }
+        .seek-group{
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        .seek-slider{
+            flex: 1;
+            appearance: none;
+            height: 6px;
+            border-radius: 999px;
+            background: #334155;
+            outline: none;
+            cursor: pointer;
+        }
+        .seek-slider::-webkit-slider-thumb,
+        .seek-slider::-moz-range-thumb{
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #38bdf8;
+            border: none;
+            cursor: pointer;
+        }
+        .time-label{
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            min-width: 42px;
+            text-align: center;
+        }
+        .control-group{
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .control-label{
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .control-select{
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .control-select:hover{
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
         @media(max-width:640px){
             .watermark{font-size:10px;padding:4px 12px}
             .info-bar{flex-direction:column;align-items:flex-start}
             .change-password-panel{padding:1rem}
+            .player-controls{padding:0.5rem}
+            .control-label{font-size:0.7rem}
+            .control-select{font-size:0.75rem}
         }
     </style>
     <script src="/api-base.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
     <div class="top-bar">
@@ -160,8 +257,35 @@
     </div>
     <div class="video-container">
         <div id="videosList" style="padding:1rem;display:flex;gap:1rem;flex-wrap:wrap;background:#071022;border-bottom:1px solid #0f172a"></div>
-        <div class="video-wrapper" id="playerWrapper">
+        <div class="video-wrapper player-wrapper" id="playerWrapper">
             <div id="playerContainer"></div>
+            <div class="player-controls" id="playerControls">
+                <div class="control-group">
+                    <label class="control-label">Speed</label>
+                    <select id="speedControl" class="control-select">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x (Normal)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="1.75">1.75x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+                <div class="control-group seek-group">
+                    <span class="time-label" id="currentTimeLabel">0:00</span>
+                    <input type="range" id="seekBar" class="seek-slider" min="0" max="100" value="0" step="1">
+                    <span class="time-label" id="durationLabel">0:00</span>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Volume</label>
+                    <input type="range" id="volumeSlider" class="seek-slider" min="0" max="100" value="100" step="1">
+                </div>
+                <button class="btn-outline" id="volumeBtn">Mute</button>
+                <button class="btn-outline" id="playPauseBtn">Play/Pause</button>
+                <button class="btn-outline" id="rewindBtn">-10s</button>
+                <button class="btn-outline" id="forwardBtn">+10s</button>
+            </div>
         </div>
         <div class="info-bar">
             <div class="video-title" id="videoTitle">Loading lesson...</div>
@@ -244,75 +368,444 @@
         }
 
         async function loadVideos() {
-            const res = await apiFetch('/api/videos', { headers: { 'Authorization': `Bearer ${token}` } });
-            if(!res.ok) return document.getElementById('videosList').innerText = 'Unable to load videos';
-            const videos = await res.json();
+            const res = await apiFetch('/api/student/folders', { headers: { 'Authorization': `Bearer ${token}` } });
             const container = document.getElementById('videosList');
             container.innerHTML = '';
-            videos.forEach(v => {
-                const card = document.createElement('div');
-                card.style.width = '220px';
-                card.style.background = '#071022';
-                card.style.border = '1px solid #0f172a';
-                card.style.borderRadius = '12px';
-                card.style.padding = '0.6rem';
-                card.style.display = 'flex';
-                card.style.flexDirection = 'column';
-                card.style.gap = '0.5rem';
-                const thumb = document.createElement('img');
-                thumb.style.objectFit = 'cover';
-                thumb.src = `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`;
-                thumb.style.width = '100%';
-                thumb.style.borderRadius = '8px';
+            if(!res.ok) {
+                const error = document.createElement('div');
+                error.style.color = '#f87171';
+                error.textContent = 'Unable to load lessons. Please refresh.';
+                container.appendChild(error);
+                return;
+            }
+            const data = await res.json();
+            if (!Array.isArray(data.folders) || data.folders.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.color = '#94a3b8';
+                empty.textContent = 'No folders or lessons available yet.';
+                container.appendChild(empty);
+            } else {
+                data.folders.forEach(folder => container.appendChild(renderFolderSection(folder, 0)));
+            }
+            if (Array.isArray(data.unassignedVideos) && data.unassignedVideos.length > 0) {
+                const unassignedSection = document.createElement('div');
+                unassignedSection.className = 'folder-card';
+                const header = document.createElement('div');
+                header.className = 'folder-header';
                 const title = document.createElement('div');
-                title.style.color = '#e6eef8';
-                title.style.fontWeight = '600';
-                title.style.fontSize = '0.95rem';
-                title.innerText = v.title || 'Untitled';
-                const info = document.createElement('div');
-                info.style.color = '#94a3b8';
-                info.style.fontSize = '0.85rem';
-                const assigned = allocations[v._id] || 0;
-                info.innerText = assigned > 0 ? `Allocated: ${assigned} view${assigned===1?'':'s'}` : 'No allocated views';
-                const btn = document.createElement('button');
-                btn.className = 'btn-outline';
-                btn.innerText = assigned > 0 ? 'Watch (use 1 view)' : 'No views allocated';
-                btn.disabled = assigned <= 0;
-                btn.onclick = () => consumeForVideo(v._id, v.title, btn, info);
-                card.appendChild(thumb);
-                card.appendChild(title);
-                card.appendChild(info);
-                card.appendChild(btn);
-                container.appendChild(card);
-            });
-            document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
+                title.className = 'folder-title';
+                title.textContent = `Unassigned Lessons (${data.unassignedVideos.length})`;
+                const toggle = document.createElement('button');
+                toggle.className = 'folder-toggle';
+                toggle.textContent = 'View';
+                header.appendChild(title);
+                header.appendChild(toggle);
+                const content = document.createElement('div');
+                content.className = 'folder-content';
+                content.style.display = 'none';
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.flexWrap = 'wrap';
+                row.style.gap = '1rem';
+                data.unassignedVideos.forEach(v => row.appendChild(renderVideoCard(v)));
+                content.appendChild(row);
+                header.onclick = () => {
+                    const visible = content.style.display === 'block';
+                    content.style.display = visible ? 'none' : 'block';
+                    toggle.textContent = visible ? 'View' : 'Hide';
+                };
+                unassignedSection.appendChild(header);
+                unassignedSection.appendChild(content);
+                container.appendChild(unassignedSection);
+            }
+            document.getElementById('viewsInfo').innerText = '🎬 Browse folders to find your lesson';
         }
 
-        function renderPlayerOverlay(embedHtml) {
+        function renderFolderSection(folder, level) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'folder-card';
+            wrapper.style.paddingLeft = `${level * 14}px`;
+            const header = document.createElement('div');
+            header.className = 'folder-header';
+            const titleBlock = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'folder-title';
+            title.textContent = folder.name;
+            const meta = document.createElement('div');
+            meta.className = 'folder-meta';
+            const totalCount = (Array.isArray(folder.videos) ? folder.videos.length : 0) + (Array.isArray(folder.children) ? folder.children.length : 0);
+            meta.textContent = totalCount > 0 ? `${totalCount} item${totalCount === 1 ? '' : 's'}` : 'Empty folder';
+            titleBlock.appendChild(title);
+            titleBlock.appendChild(meta);
+            const toggle = document.createElement('button');
+            toggle.className = 'folder-toggle';
+            toggle.textContent = 'View';
+            header.appendChild(titleBlock);
+            header.appendChild(toggle);
+            wrapper.appendChild(header);
+            const content = document.createElement('div');
+            content.className = 'folder-content';
+            content.style.display = 'none';
+            content.style.paddingTop = '0.75rem';
+            if (Array.isArray(folder.videos) && folder.videos.length > 0) {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.flexWrap = 'wrap';
+                row.style.gap = '1rem';
+                folder.videos.forEach(v => row.appendChild(renderVideoCard(v)));
+                content.appendChild(row);
+            }
+            if (Array.isArray(folder.children) && folder.children.length > 0) {
+                folder.children.forEach(child => content.appendChild(renderFolderSection(child, level + 1)));
+            }
+            if (content.children.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'folder-empty';
+                empty.textContent = 'This folder has no lessons or subfolders yet.';
+                content.appendChild(empty);
+            }
+            header.onclick = () => {
+                const visible = content.style.display === 'block';
+                content.style.display = visible ? 'none' : 'block';
+                toggle.textContent = visible ? 'View' : 'Hide';
+            };
+            wrapper.appendChild(content);
+            return wrapper;
+        }
+
+        function renderVideoCard(v) {
+            const card = document.createElement('div');
+            card.style.width = '220px';
+            card.style.background = '#071022';
+            card.style.border = '1px solid #0f172a';
+            card.style.borderRadius = '12px';
+            card.style.padding = '0.6rem';
+            card.style.display = 'flex';
+            card.style.flexDirection = 'column';
+            card.style.gap = '0.5rem';
+            const thumb = document.createElement('img');
+            thumb.style.objectFit = 'cover';
+            thumb.src = `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`;
+            thumb.style.width = '100%';
+            thumb.style.borderRadius = '8px';
+            const title = document.createElement('div');
+            title.style.color = '#e6eef8';
+            title.style.fontWeight = '600';
+            title.style.fontSize = '0.95rem';
+            title.innerText = v.title || 'Untitled';
+            const info = document.createElement('div');
+            info.style.color = '#94a3b8';
+            info.style.fontSize = '0.85rem';
+            const assigned = allocations[v._id] || 0;
+            info.innerText = assigned > 0 ? `Allocated: ${assigned} view${assigned===1?'':'s'}` : 'No allocated views';
+            const btn = document.createElement('button');
+            btn.className = 'btn-outline';
+            btn.innerText = assigned > 0 ? 'Watch (use 1 view)' : 'No views allocated';
+            btn.disabled = assigned <= 0;
+            btn.onclick = () => consumeForVideo(v._id, v.title, btn, info);
+            card.appendChild(thumb);
+            card.appendChild(title);
+            card.appendChild(info);
+            card.appendChild(btn);
+            return card;
+        }
+
+        let currentPlayer = null;
+        let playerReadyFn = null;
+        let ytApiReady = false;
+        let controlHideTimeout = null;
+
+        function showPlayerControls() {
+            const controls = document.getElementById('playerControls');
+            if (!controls) return;
+            controls.classList.add('visible');
+            if (controlHideTimeout) clearTimeout(controlHideTimeout);
+            controlHideTimeout = setTimeout(() => {
+                controls.classList.remove('visible');
+            }, 2200);
+        }
+
+        function hidePlayerControls() {
+            const controls = document.getElementById('playerControls');
+            if (!controls) return;
+            controls.classList.remove('visible');
+            if (controlHideTimeout) {
+                clearTimeout(controlHideTimeout);
+                controlHideTimeout = null;
+            }
+        }
+
+        function togglePlayPause() {
+            if (!currentPlayer || typeof currentPlayer.getPlayerState !== 'function') return;
+            const state = currentPlayer.getPlayerState();
+            if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
+                currentPlayer.pauseVideo();
+            } else {
+                currentPlayer.playVideo();
+            }
+            showPlayerControls();
+        }
+
+        function onYouTubeIframeAPIReady() {
+            ytApiReady = true;
+        }
+
+        function renderPlayerOverlay(embedHtml, youtubeId) {
             const container = document.getElementById('playerContainer');
             container.innerHTML = '';
+            if (currentPlayer && typeof currentPlayer.destroy === 'function') {
+                currentPlayer.destroy();
+                currentPlayer = null;
+            }
+            clearSeekUpdater();
             const frameWrapper = document.createElement('div');
             frameWrapper.className = 'player-frame';
+            frameWrapper.id = `youtube-player-wrapper-${Date.now()}`;
+
+            const iframeBlocker = document.createElement('div');
+            iframeBlocker.className = 'iframe-blocker';
+            iframeBlocker.addEventListener('click', (event) => {
+                event.stopPropagation();
+                togglePlayPause();
+            });
+
             const overlay = document.createElement('div');
             overlay.className = 'player-overlay';
+            overlay.id = 'player-overlay-start';
+            
             const btn = document.createElement('button');
             btn.innerText = 'Play Lesson';
             btn.onclick = () => {
-                frameWrapper.innerHTML = embedHtml;
-                const blocker = document.createElement('div');
-                blocker.className = 'youtube-blocker';
-                ['top','bottom','left','right'].forEach(pos => {
-                    const edge = document.createElement('div');
-                    edge.className = `youtube-blocker-edge ${pos}`;
-                    blocker.appendChild(edge);
-                });
-                frameWrapper.appendChild(blocker);
                 overlay.style.display = 'none';
+                iframeBlocker.style.display = 'block';
+                frameWrapper.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff">Loading player…</div>';
+                const loadPlayer = () => {
+                    if (ytApiReady && window.YT && window.YT.Player && typeof window.YT.Player === 'function') {
+                        initYoutubePlayer(youtubeId, frameWrapper);
+                    } else if (!ytApiReady) {
+                        setTimeout(loadPlayer, 200);
+                    } else if (embedHtml) {
+                        frameWrapper.innerHTML = embedHtml;
+                    } else {
+                        frameWrapper.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff">Unable to load video</div>';
+                    }
+                };
+                loadPlayer();
             };
             overlay.appendChild(btn);
             container.appendChild(frameWrapper);
+            container.appendChild(iframeBlocker);
             container.appendChild(overlay);
         }
+
+        function initYoutubePlayer(youtubeId, container) {
+            if (currentPlayer && typeof currentPlayer.destroy === 'function') {
+                currentPlayer.destroy();
+                currentPlayer = null;
+            }
+            container.innerHTML = '<div id="yt-player" style="width:100%;height:100%"></div>';
+            
+            currentPlayer = new YT.Player('yt-player', {
+                height: '100%',
+                width: '100%',
+                videoId: youtubeId,
+                playerVars: {
+                    'controls': 1,
+                    'rel': 0,
+                    'modestbranding': 1,
+                    'fs': 1,
+                    'playsinline': 1,
+                    'iv_load_policy': 3,
+                    'showinfo': 0,
+                    'cc_load_policy': 0,
+                    'autoplay': 1,
+                    'enablejsapi': 1,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function updateVolumeButtonLabel() {
+            const btn = document.getElementById('volumeBtn');
+            const slider = document.getElementById('volumeSlider');
+            if (!btn || !slider || !currentPlayer || typeof currentPlayer.getVolume !== 'function' || typeof currentPlayer.isMuted !== 'function') return;
+            if (currentPlayer.isMuted()) {
+                btn.innerText = 'Unmute';
+                slider.value = 0;
+            } else {
+                const volume = currentPlayer.getVolume();
+                btn.innerText = `Vol ${volume}%`;
+                slider.value = volume;
+            }
+        }
+
+        function onPlayerReady(event) {
+            console.log('YouTube player ready');
+            showPlayerControls();
+            updateVolumeButtonLabel();
+            startSeekUpdater();
+        }
+
+        function onPlayerStateChange(event) {
+            console.log('Player state:', event.data);
+        }
+
+        let seekUpdateInterval = null;
+
+        function formatTime(seconds) {
+            const sec = Math.max(0, Math.floor(seconds || 0));
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function startSeekUpdater() {
+            clearSeekUpdater();
+            const seekBar = document.getElementById('seekBar');
+            const currentTimeLabel = document.getElementById('currentTimeLabel');
+            const durationLabel = document.getElementById('durationLabel');
+            if (!seekBar || !currentPlayer) return;
+            seekUpdateInterval = setInterval(() => {
+                if (!currentPlayer || typeof currentPlayer.getCurrentTime !== 'function' || typeof currentPlayer.getDuration !== 'function') return;
+                const current = currentPlayer.getCurrentTime();
+                const duration = currentPlayer.getDuration();
+                if (!Number.isFinite(duration) || duration <= 0) return;
+                seekBar.max = Math.floor(duration);
+                seekBar.value = Math.floor(current);
+                currentTimeLabel.textContent = formatTime(current);
+                durationLabel.textContent = formatTime(duration);
+            }, 500);
+        }
+
+        function clearSeekUpdater() {
+            if (seekUpdateInterval) {
+                clearInterval(seekUpdateInterval);
+                seekUpdateInterval = null;
+            }
+        }
+
+        document.getElementById('seekBar').addEventListener('input', function(e) {
+            if (!currentPlayer || typeof currentPlayer.seekTo !== 'function') return;
+            const seekValue = parseFloat(e.target.value);
+            currentPlayer.seekTo(seekValue, true);
+        });
+
+        const playerWrapperEl = document.getElementById('playerWrapper');
+        if (playerWrapperEl) {
+            playerWrapperEl.addEventListener('mousemove', showPlayerControls);
+            playerWrapperEl.addEventListener('touchstart', showPlayerControls);
+            playerWrapperEl.addEventListener('mouseleave', hidePlayerControls);
+        }
+
+        // Speed control
+        document.getElementById('speedControl').addEventListener('change', function(e) {
+            const speed = parseFloat(e.target.value);
+            if (currentPlayer && currentPlayer.setPlaybackRate) {
+                currentPlayer.setPlaybackRate(speed);
+                localStorage.setItem('videoSpeed', speed);
+            }
+        });
+
+        // Play/pause and seek controls
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            if (!currentPlayer || !currentPlayer.getPlayerState) return;
+            const state = currentPlayer.getPlayerState();
+            if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
+                currentPlayer.pauseVideo();
+            } else {
+                currentPlayer.playVideo();
+            }
+        });
+
+        document.getElementById('rewindBtn').addEventListener('click', function() {
+            if (!currentPlayer || !currentPlayer.getCurrentTime || !currentPlayer.seekTo) return;
+            const time = currentPlayer.getCurrentTime();
+            currentPlayer.seekTo(Math.max(time - 10, 0), true);
+        });
+
+        document.getElementById('forwardBtn').addEventListener('click', function() {
+            if (!currentPlayer || !currentPlayer.getCurrentTime || !currentPlayer.seekTo) return;
+            const time = currentPlayer.getCurrentTime();
+            currentPlayer.seekTo(time + 10, true);
+        });
+
+        document.getElementById('volumeBtn').addEventListener('click', function() {
+            if (!currentPlayer || typeof currentPlayer.isMuted !== 'function') return;
+            if (currentPlayer.isMuted()) {
+                currentPlayer.unMute();
+            } else {
+                currentPlayer.mute();
+            }
+            updateVolumeButtonLabel();
+            showPlayerControls();
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', function(e) {
+            if (!currentPlayer || typeof currentPlayer.setVolume !== 'function' || typeof currentPlayer.isMuted !== 'function') return;
+            const volume = Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0));
+            currentPlayer.setVolume(volume);
+            if (volume === 0) {
+                currentPlayer.mute();
+            } else {
+                currentPlayer.unMute();
+            }
+            updateVolumeButtonLabel();
+            showPlayerControls();
+        });
+
+        function changeVideoVolume(delta) {
+            if (!currentPlayer || typeof currentPlayer.getVolume !== 'function' || typeof currentPlayer.setVolume !== 'function') return;
+            const currentVolume = currentPlayer.getVolume();
+            const nextVolume = Math.min(100, Math.max(0, currentVolume + delta));
+            currentPlayer.setVolume(nextVolume);
+            showPlayerControls();
+        }
+
+        window.addEventListener('keydown', function(e) {
+            const activeTag = document.activeElement && document.activeElement.tagName;
+            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT' || document.activeElement.isContentEditable) {
+                return;
+            }
+            if (!currentPlayer) return;
+
+            switch (e.key) {
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case ' ': // Spacebar
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    if (typeof currentPlayer.getCurrentTime === 'function' && typeof currentPlayer.seekTo === 'function') {
+                        currentPlayer.seekTo(Math.min((currentPlayer.getDuration() || 0), currentPlayer.getCurrentTime() + 10), true);
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (typeof currentPlayer.getCurrentTime === 'function' && typeof currentPlayer.seekTo === 'function') {
+                        currentPlayer.seekTo(Math.max(0, currentPlayer.getCurrentTime() - 10), true);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        // Restore previous speed setting
+        window.addEventListener('load', function() {
+            const savedSpeed = localStorage.getItem('videoSpeed');
+            if (savedSpeed) {
+                document.getElementById('speedControl').value = savedSpeed;
+            }
+        });
 
         async function consumeForVideo(videoId, title, btn, infoEl) {
             if((allocations[videoId] || 0) <= 0) return alert('No views allocated for this lesson');
@@ -335,7 +828,8 @@
             document.getElementById('videoTitle').innerText = title || 'Lesson';
             document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
             infoEl.innerText = `Allocated: ${remaining} view${remaining===1?'':'s'}`;
-            renderPlayerOverlay(data.embedHtml);
+            // Pass youtubeId to renderPlayerOverlay
+            renderPlayerOverlay(data.embedHtml, data.video?.youtubeId || '');
         }
 
         const changePwdBtn = document.getElementById('changePwdBtn');

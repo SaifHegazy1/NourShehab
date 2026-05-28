@@ -261,7 +261,33 @@
                     id="newVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
             <div class="form-group"><label>Video Title</label><input type="text" id="newVideoTitle"></div>
             <div class="form-group"><label>Description</label><textarea id="newVideoDesc" rows="2"></textarea></div>
+            <div class="form-group"><label>Select Folders</label>
+                <select id="newVideoFolderSelect" multiple size="5"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple folders.</small>
+            </div>
             <button id="createVideoBtn">Add Video</button>
+        </div>
+
+        <div class="card">
+            <h2>📁 Folder Library</h2>
+            <div class="form-group"><label>Folder Name</label><input type="text" id="newFolderName" placeholder="New folder name"></div>
+            <div class="form-group"><label>Parent Folder (optional)</label>
+                <select id="parentFolderSelect"><option value="">Root folder</option></select>
+            </div>
+            <button id="createFolderBtn" type="button">Create Folder</button>
+            <div id="folderTreeContainer" style="margin-top:1rem"></div>
+        </div>
+
+        <div class="card">
+            <h2>📌 Assign Videos to Folder</h2>
+            <div class="form-group"><label>Select Videos</label>
+                <select id="assignVideoSelect" multiple size="6"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple videos.</small>
+            </div>
+            <div class="form-group"><label>Select Folder</label>
+                <select id="assignFolderSelect"><option value="">Root (clear assignment)</option></select>
+            </div>
+            <button id="assignFolderBtn">Assign Selected Videos</button>
         </div>
 
         <div class="card">
@@ -272,6 +298,7 @@
                         <tr>
                             <th>Title</th>
                             <th>YouTube ID</th>
+                            <th>Folders</th>
                             <th>Views</th>
                             <th>Actions</th>
                         </tr>
@@ -452,9 +479,80 @@
                 await loadVideoSettings();
                 await loadTutorProfile();
                 await loadStudents();
+                await loadFolders();
                 await loadVideos();
             } catch (err) {
                 console.error('loadAll error', err);
+            }
+        }
+        async function loadFolders() {
+            const r = await fetchAdmin('/api/admin/folders');
+            if (!r.ok) { showMessage('Unable to load folders. Please refresh or re-login.', true); return; }
+            const data = await r.json();
+            const folderSelect = document.getElementById('parentFolderSelect');
+            const assignFolderSelect = document.getElementById('assignFolderSelect');
+            const newVideoFolderSelect = document.getElementById('newVideoFolderSelect');
+            const folderTreeContainer = document.getElementById('folderTreeContainer');
+            folderSelect.innerHTML = '<option value="">Root folder</option>';
+            assignFolderSelect.innerHTML = '<option value="">Root (clear assignment)</option>';
+            if (newVideoFolderSelect) {
+                newVideoFolderSelect.innerHTML = '<option value="" disabled>None / Root</option>';
+            }
+            const editVideoFolderSelect = document.getElementById('editVideoFolderSelect');
+            if (editVideoFolderSelect) {
+                editVideoFolderSelect.innerHTML = '<option value="" disabled>Select folders for this video</option>';
+            }
+            data.folders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder._id;
+                option.textContent = folder.name;
+                folderSelect.appendChild(option);
+                assignFolderSelect.appendChild(option.cloneNode(true));
+                if (newVideoFolderSelect) {
+                    newVideoFolderSelect.appendChild(option.cloneNode(true));
+                }
+                if (editVideoFolderSelect) {
+                    editVideoFolderSelect.appendChild(option.cloneNode(true));
+                }
+            });
+            renderFolderTree(data.folders, folderTreeContainer);
+        }
+        function renderFolderTree(folders, container) {
+            container.innerHTML = '';
+            const buildTree = (items, parentId = null, level = 0) => {
+                const list = document.createElement('div');
+                items.filter(f => {
+                    const parent = f.parentFolder ? f.parentFolder.toString ? f.parentFolder.toString() : '' : '';
+                    return parent === (parentId ? parentId.toString ? parentId.toString() : parentId : '');
+                }).forEach(folder => {
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.justifyContent = 'space-between';
+                    row.style.alignItems = 'center';
+                    row.style.padding = '0.4rem 0';
+                    row.style.paddingLeft = `${level * 16}px`;
+                    row.innerHTML = `<strong>${folder.name}</strong>`;
+                    const actions = document.createElement('div');
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.textContent = 'Rename';
+                    editBtn.addEventListener('click', () => editFolder(folder));
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'danger';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', () => deleteFolder(folder._id, folder.name));
+                    actions.appendChild(editBtn);
+                    actions.appendChild(deleteBtn);
+                    row.appendChild(actions);
+                    list.appendChild(row);
+                    list.appendChild(buildTree(folders, folder._id, level + 1));
+                });
+                return list;
+            };
+            container.appendChild(buildTree(folders, null, 0));
+            if (container.innerHTML.trim() === '') {
+                container.textContent = 'No folders created yet.';
             }
         }
         async function loadVideos() {
@@ -462,14 +560,25 @@
             if (!r.ok) { showMessage('Unable to load videos. Please refresh or re-login.', true); return; }
             const videos = await r.json();
             const sel = document.getElementById('videoSelect');
-            if (!sel) return;
-            sel.innerHTML = '';
-            videos.forEach(v => {
-                const o = document.createElement('option');
-                o.value = v._id;
-                o.textContent = `${v.title} (${v.viewCount || 0} views)`;
-                sel.appendChild(o);
-            });
+            const assignSelect = document.getElementById('assignVideoSelect');
+            if (sel) {
+                sel.innerHTML = '';
+                videos.forEach(v => {
+                    const o = document.createElement('option');
+                    o.value = v._id;
+                    o.textContent = `${v.title} (${v.viewCount || 0} views)`;
+                    sel.appendChild(o);
+                });
+            }
+            if (assignSelect) {
+                assignSelect.innerHTML = '';
+                videos.forEach(v => {
+                    const o = document.createElement('option');
+                    o.value = v._id;
+                    o.textContent = `${v.title} (${v.viewCount || 0} views)`;
+                    assignSelect.appendChild(o);
+                });
+            }
             renderVideosLibrary(videos);
         }
         function renderVideosLibrary(videos) {
@@ -480,8 +589,9 @@
                 const row = tbody.insertRow();
                 row.insertCell(0).textContent = v.title || 'Untitled';
                 row.insertCell(1).textContent = v.youtubeId;
-                row.insertCell(2).textContent = v.viewCount || 0;
-                const actionsCell = row.insertCell(3);
+                row.insertCell(2).textContent = Array.isArray(v.folders) && v.folders.length > 0 ? v.folders.map(f => f.name).join(', ') : 'Root';
+                row.insertCell(3).textContent = v.viewCount || 0;
+                const actionsCell = row.insertCell(4);
                 const editBtn = document.createElement('button');
                 editBtn.type = 'button';
                 editBtn.textContent = 'Edit';
@@ -495,18 +605,94 @@
                 actionsCell.appendChild(deleteBtn);
             });
         }
-        async function editVideo(video) {
-            const newTitle = prompt('Enter new title for this video:', video.title || '');
-            if (newTitle === null) return;
-            const trimmedTitle = newTitle.trim();
-            if (!trimmedTitle) { showMessage('Video title cannot be empty', true); return; }
+        function editVideo(video) {
+            const editCard = document.getElementById('editVideoCard');
+            editCard.style.display = 'block';
+            document.getElementById('editVideoId').value = video._id;
+            document.getElementById('editVideoYoutubeId').value = video.youtubeId || '';
+            document.getElementById('editVideoTitle').value = video.title || '';
+            document.getElementById('editVideoDesc').value = video.description || '';
+            const folderSelect = document.getElementById('editVideoFolderSelect');
+            if (folderSelect) {
+                const selectedIds = Array.isArray(video.folders) ? video.folders.map(f => f._id.toString()) : [];
+                Array.from(folderSelect.options).forEach(opt => {
+                    opt.selected = selectedIds.includes(opt.value);
+                });
+            }
+            document.getElementById('saveEditedVideoBtn').onclick = saveEditedVideo;
+            document.getElementById('cancelEditVideoBtn').onclick = cancelEditVideo;
+        }
+
+        function cancelEditVideo() {
+            const editCard = document.getElementById('editVideoCard');
+            editCard.style.display = 'none';
+            document.getElementById('editVideoId').value = '';
+            document.getElementById('editVideoYoutubeId').value = '';
+            document.getElementById('editVideoTitle').value = '';
+            document.getElementById('editVideoDesc').value = '';
+            const folderSelect = document.getElementById('editVideoFolderSelect');
+            if (folderSelect) {
+                Array.from(folderSelect.options).forEach(opt => opt.selected = false);
+            }
+        }
+
+        async function saveEditedVideo() {
+            const videoId = document.getElementById('editVideoId').value;
+            const title = document.getElementById('editVideoTitle').value.trim();
+            const description = document.getElementById('editVideoDesc').value;
+            const folderSelect = document.getElementById('editVideoFolderSelect');
+            const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
+            if (!videoId) { showMessage('No video selected to edit', true); return; }
+            if (!title) { showMessage('Video title cannot be empty', true); return; }
             const r = await fetchAdmin('/api/admin/update-video', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoId: video._id, youtubeId: video.youtubeId, title: trimmedTitle, description: video.description || '' })
+                body: JSON.stringify({ videoId, title, description, folderIds })
             });
             const data = await r.json();
-            if (r.ok) { showMessage('Video title updated', false); loadVideos(); } else { showMessage(data.error || 'Failed to update video', true); }
+            if (r.ok) {
+                showMessage('Video updated', false);
+                cancelEditVideo();
+                loadVideos();
+            } else {
+                showMessage(data.error || 'Failed to update video', true);
+            }
+        }
+        async function editFolder(folder) {
+            const newName = prompt('Enter new folder name:', folder.name || '');
+            if (newName === null) return;
+            const trimmedName = newName.trim();
+            if (!trimmedName) { showMessage('Folder name cannot be empty', true); return; }
+            const parentFolderId = prompt('Parent folder ID for nesting (leave blank for root):', folder.parentFolder || '');
+            const body = { name: trimmedName };
+            if (parentFolderId !== null) body.parentFolderId = parentFolderId.trim() || null;
+            const r = await fetchAdmin(`/api/admin/folders/${folder._id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await r.json();
+            if (r.ok) { showMessage('Folder updated', false); loadFolders(); } else { showMessage(data.error || 'Failed to update folder', true); }
+        }
+        async function deleteFolder(folderId, folderName) {
+            if (!confirm(`Delete folder ${folderName} and all its subfolders?`)) return;
+            const r = await fetchAdmin(`/api/admin/folders/${folderId}`, { method: 'DELETE' });
+            const data = await r.json();
+            if (r.ok) { showMessage('Folder deleted', false); loadFolders(); loadVideos(); } else { showMessage(data.error || 'Failed to delete folder', true); }
+        }
+        async function assignVideosToFolder() {
+            const videoSelect = document.getElementById('assignVideoSelect');
+            const folderSelect = document.getElementById('assignFolderSelect');
+            const selectedVideos = Array.from(videoSelect.selectedOptions).map(o => o.value);
+            const folderId = folderSelect.value || null;
+            if (selectedVideos.length === 0) { showMessage('Select at least one video to assign', true); return; }
+            const r = await fetchAdmin('/api/admin/videos/assign-folders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoIds: selectedVideos, folderIds: folderId ? [folderId] : [] })
+            });
+            const data = await r.json();
+            if (r.ok) { showMessage('Videos assigned successfully', false); loadVideos(); } else { showMessage(data.error || 'Failed to assign videos', true); }
         }
         async function loadVideoSettings() { const r = await fetchAdmin('/api/admin/video-settings'); const d = await r.json(); if (d) { document.getElementById('youtubeId').value = d.youtubeId || ''; document.getElementById('videoTitle').value = d.title || ''; document.getElementById('videoDesc').value = d.description || ''; } }
         async function loadTutorProfile() { const r = await apiFetch('/api/tutor/profile'); const d = await r.json(); document.getElementById('tutorName').value = d.name || ''; document.getElementById('tutorAbout').value = d.about || ''; document.getElementById('tutorPhotoUrl').value = d.photoUrl || ''; }
@@ -526,7 +712,34 @@
             }
         }
         document.getElementById('updateVideoBtn').onclick = async () => { const videoInput = document.getElementById('youtubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('videoTitle').value, description: document.getElementById('videoDesc').value }; const r = await fetchAdmin('/api/admin/video-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { document.getElementById('youtubeId').value = videoId; showMessage(`✅ Default video saved! ID: ${videoId}`, false); } else { const err = await r.json(); showMessage(err.error || 'Error updating video', true); } };
-        document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value }; const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
+        document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const folderSelect = document.getElementById('newVideoFolderSelect'); const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : []; const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value, folderIds }; const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; if (folderSelect) folderSelect.selectedIndex = -1; loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
+        document.getElementById('createFolderBtn').onclick = async () => {
+            const name = document.getElementById('newFolderName').value.trim();
+            let parentFolderId = document.getElementById('parentFolderSelect').value;
+            parentFolderId = parentFolderId ? parentFolderId : null;
+            if (!name) { showMessage('Enter folder name', true); return; }
+            try {
+                const r = await fetchAdmin('/api/admin/folders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, parentFolderId })
+                });
+                const data = await r.json().catch(() => null);
+                if (r.ok) {
+                    showMessage('✅ Folder created successfully!', false);
+                    document.getElementById('newFolderName').value = '';
+                    document.getElementById('parentFolderSelect').selectedIndex = 0;
+                    loadFolders();
+                    loadVideos();
+                } else {
+                    showMessage(data?.error || `Failed to create folder (${r.status} ${r.statusText})`, true);
+                }
+            } catch (err) {
+                console.error('Create folder failed:', err);
+                showMessage('Network error while creating folder', true);
+            }
+        };
+        document.getElementById('assignFolderBtn').onclick = assignVideosToFolder;
         document.getElementById('updateTutorBtn').onclick = async () => { const data = { name: document.getElementById('tutorName').value, about: document.getElementById('tutorAbout').value, photoUrl: document.getElementById('tutorPhotoUrl').value }; const r = await fetchAdmin('/api/admin/tutor-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) showMessage('Tutor profile updated', false); else { const err = await r.json(); showMessage(err.error || 'Error', true); } };
         document.getElementById('uploadExcelBtn').onclick = async () => { const file = document.getElementById('excelFile').files[0]; if (!file) return; const fd = new FormData(); fd.append('excelFile', file); const r = await fetchAdmin('/api/admin/upload-students', { method: 'POST', body: fd }); const data = await r.json(); showMessage(`Added ${data.added}, skipped ${data.skipped}`, !data.success); if (data.success) loadStudents(); };
         document.getElementById('createStudentBtn').onclick = async () => { const username = document.getElementById('newStudentUsername').value.trim(); if (!username) { showMessage('Enter username', true); return; } const r = await fetchAdmin('/api/admin/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }); const data = await r.json(); if (r.ok) { showMessage(`Student created! Code: ${data.student.uniqueCode}`, false); document.getElementById('newStudentUsername').value = ''; loadStudents(); } else showMessage(data.error || 'Failed', true); };

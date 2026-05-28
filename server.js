@@ -53,7 +53,14 @@ const videoSchema = new mongoose.Schema({
     youtubeId: { type: String, required: true },
     title: { type: String, default: 'Educational Video' },
     description: { type: String, default: '' },
+    folders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Folder' }],
     viewCount: { type: Number, default: 0, min: 0 },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const folderSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    parentFolder: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', default: null },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -67,6 +74,7 @@ const tutorProfileSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const VideoSettings = mongoose.model('VideoSettings', videoSettingsSchema);
 const TutorProfile = mongoose.model('TutorProfile', tutorProfileSchema);
+const Folder = mongoose.model('Folder', folderSchema);
 const Video = mongoose.model('Video', videoSchema);
 
 // ==================== MIDDLEWARE ====================
@@ -98,6 +106,48 @@ const extractYouTubeId = (input) => {
     if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
     const match = trimmed.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/);
     return match ? match[1] : null;
+};
+
+const buildFolderTree = (folders, videos = []) => {
+    const folderMap = {};
+    folders.forEach(folder => {
+        folderMap[folder._id.toString()] = { ...folder.toObject ? folder.toObject() : folder, children: [], videos: [] };
+    });
+
+    const roots = [];
+    folders.forEach(folder => {
+        const parentId = folder.parentFolder ? folder.parentFolder.toString() : null;
+        if (parentId && folderMap[parentId]) {
+            folderMap[parentId].children.push(folderMap[folder._id.toString()]);
+        } else {
+            roots.push(folderMap[folder._id.toString()]);
+        }
+    });
+
+    const unassigned = [];
+    videos.forEach(video => {
+        const assignedIds = Array.isArray(video.folders) ? video.folders.map(f => f? f._id.toString() : null).filter(Boolean) : [];
+        if (assignedIds.length === 0) {
+            unassigned.push(video);
+        } else {
+            assignedIds.forEach(folderId => {
+                if (folderMap[folderId]) {
+                    folderMap[folderId].videos.push(video);
+                }
+            });
+        }
+    });
+
+    return { folders: roots, unassignedVideos: unassigned };
+};
+
+const collectDescendantFolderIds = async (folderId) => {
+    const folders = [folderId];
+    const children = await Folder.find({ parentFolder: folderId }).select('_id');
+    for (const child of children) {
+        folders.push(...await collectDescendantFolderIds(child._id));
+    }
+    return folders;
 };
 
 // Initialize default admin, video settings, tutor profile
@@ -207,7 +257,7 @@ app.get('/api/student/video-embed', authenticateJWT, requireStudent, async (req,
         return res.status(400).json({ error: 'No video configured' });
     }
     const origin = encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000');
-    const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=0&fs=0&disablekb=1&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
+    const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
     res.json({ html: embedHtml });
 });
 
@@ -240,8 +290,8 @@ app.post('/api/student/consume-view-for-video', authenticateJWT, requireStudent,
 
         const newToken = jwt.sign({ id: user._id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
         const origin = encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000');
-        const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=0&fs=0&disablekb=1&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
-        res.json({ success: true, remainingViews: user.allowedViews, newToken, embedHtml, video: { id: video._id, viewCount: video.viewCount, title: video.title }, usedFromPerVideo });
+        const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
+        res.json({ success: true, remainingViews: user.allowedViews, newToken, embedHtml, video: { id: video._id, viewCount: video.viewCount, title: video.title, youtubeId: video.youtubeId }, usedFromPerVideo });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -252,6 +302,132 @@ app.post('/api/student/consume-view-for-video', authenticateJWT, requireStudent,
 app.get('/api/admin/students', authenticateJWT, requireAdmin, async (req, res) => {
     const students = await User.find({ role: 'student' }).select('-passwordHash');
     res.json(students);
+});
+
+app.get('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) => {
+    const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+    res.json({ folders });
+});
+
+app.get('/api/admin/folders/tree', authenticateJWT, requireAdmin, async (req, res) => {
+    const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+    const videos = await Video.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
+    const tree = buildFolderTree(folders, videos);
+    res.json(tree);
+});
+
+app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { name, parentFolderId } = req.body;
+        if (!name || typeof name !== 'string' || !name.trim()) {
+            return res.status(400).json({ error: 'Folder name is required' });
+        }
+        
+        let parentFolder = null;
+        if (parentFolderId && parentFolderId.trim && parentFolderId.trim() !== '') {
+            if (!mongoose.Types.ObjectId.isValid(parentFolderId)) {
+                return res.status(400).json({ error: 'Invalid parent folder ID format' });
+            }
+            parentFolder = await Folder.findById(parentFolderId);
+            if (!parentFolder) {
+                return res.status(404).json({ error: 'Parent folder not found' });
+            }
+        }
+        
+        const folder = await Folder.create({ 
+            name: name.trim(), 
+            parentFolder: parentFolder ? parentFolder._id : null 
+        });
+        
+        res.json({ success: true, folder });
+    } catch (err) {
+        console.error('Folder creation error:', err);
+        res.status(500).json({ error: 'Server error: ' + err.message });
+    }
+});
+
+app.post('/api/admin/folders/:folderId', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { folderId } = req.params;
+        const { name, parentFolderId } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(folderId)) return res.status(400).json({ error: 'Invalid folder ID' });
+        const folder = await Folder.findById(folderId);
+        if (!folder) return res.status(404).json({ error: 'Folder not found' });
+        if (name !== undefined) {
+            if (!name || !name.trim()) return res.status(400).json({ error: 'Folder name cannot be empty' });
+            folder.name = name.trim();
+        }
+        if (parentFolderId !== undefined) {
+            if (parentFolderId && !mongoose.Types.ObjectId.isValid(parentFolderId)) return res.status(400).json({ error: 'Invalid parent folder ID' });
+            if (parentFolderId && parentFolderId.toString() === folderId.toString()) return res.status(400).json({ error: 'Folder cannot be its own parent' });
+            if (parentFolderId) {
+                const parentFolder = await Folder.findById(parentFolderId);
+                if (!parentFolder) return res.status(404).json({ error: 'Parent folder not found' });
+                const descendants = await collectDescendantFolderIds(folderId);
+                if (descendants.find(id => id.toString() === parentFolderId.toString())) {
+                    return res.status(400).json({ error: 'Cannot move folder under its own child' });
+                }
+                folder.parentFolder = parentFolder._id;
+            } else {
+                folder.parentFolder = null;
+            }
+        }
+        await folder.save();
+        res.json({ success: true, folder });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/admin/folders/:folderId', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { folderId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(folderId)) return res.status(400).json({ error: 'Invalid folder ID' });
+        const folder = await Folder.findById(folderId);
+        if (!folder) return res.status(404).json({ error: 'Folder not found' });
+        const folderIds = await collectDescendantFolderIds(folder._id);
+        await Folder.deleteMany({ _id: { $in: folderIds } });
+        await Video.updateMany({ folders: { $in: folderIds } }, { $pull: { folders: { $in: folderIds } } });
+        res.json({ success: true, deletedFolderCount: folderIds.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/admin/videos/assign-folders', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { videoIds, folderIds } = req.body;
+        if (!Array.isArray(videoIds) || videoIds.length === 0) return res.status(400).json({ error: 'videoIds required' });
+        const validVideoIds = videoIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+        if (validVideoIds.length !== videoIds.length) return res.status(400).json({ error: 'One or more invalid videoIds' });
+        const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
+        const folders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
+        if (validFolderIds.length !== folders.length) return res.status(400).json({ error: 'One or more invalid folderIds' });
+        await Promise.all(validVideoIds.map(async videoId => {
+            const video = await Video.findById(videoId);
+            if (!video) return;
+            video.folders = validFolderIds;
+            await video.save();
+        }));
+        res.json({ success: true, assignedVideos: validVideoIds.length, assignedFolders: validFolderIds.length });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.get('/api/student/folders', authenticateJWT, requireStudent, async (req, res) => {
+    try {
+        const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+        const videos = await Video.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
+        const tree = buildFolderTree(folders, videos);
+        res.json(tree);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 app.post('/api/admin/add-views', authenticateJWT, requireAdmin, async (req, res) => {
@@ -335,11 +511,23 @@ app.post('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) =>
         const existing = await Video.findOne({ youtubeId });
         if (existing) return res.status(400).json({ error: 'This video is already in the library' });
 
+        const folderIds = Array.isArray(req.body.folderIds) ? req.body.folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
+        if (Array.isArray(req.body.folderIds) && folderIds.length !== req.body.folderIds.length) {
+            return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
+        }
+
+        if (folderIds.length > 0) {
+            const foundFolders = await Folder.find({ _id: { $in: folderIds } }).select('_id');
+            if (foundFolders.length !== folderIds.length) {
+                return res.status(400).json({ error: 'One or more folders not found' });
+            }
+        }
+
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + youtubeId)}&format=json`;
         const resp = await fetch(oembedUrl, { method: 'GET' });
         if (!resp.ok) return res.status(400).json({ error: 'Video does not allow embedding or is invalid' });
 
-        const video = await Video.create({ youtubeId, title: req.body.title || 'Untitled Video', description: req.body.description || '' });
+        const video = await Video.create({ youtubeId, title: req.body.title || 'Untitled Video', description: req.body.description || '', folders: folderIds });
         res.json({ success: true, video });
     } catch (err) {
         console.error(err);
@@ -350,7 +538,7 @@ app.post('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) =>
 // Validate a YouTube video is embeddable using oEmbed, then update a Video document
 app.post('/api/admin/update-video', authenticateJWT, requireAdmin, async (req, res) => {
     try {
-        const { videoId, youtubeId, title, description } = req.body;
+        const { videoId, youtubeId, title, description, folderIds } = req.body;
         if (!videoId || !youtubeId) return res.status(400).json({ error: 'videoId and youtubeId required' });
 
         // Validate embeddable via YouTube oEmbed
@@ -363,6 +551,21 @@ app.post('/api/admin/update-video', authenticateJWT, requireAdmin, async (req, r
         video.youtubeId = youtubeId;
         if (title !== undefined) video.title = title;
         if (description !== undefined) video.description = description;
+
+        if (folderIds !== undefined) {
+            const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
+            if (!Array.isArray(folderIds) || validFolderIds.length !== folderIds.length) {
+                return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
+            }
+            if (validFolderIds.length > 0) {
+                const foundFolders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
+                if (foundFolders.length !== validFolderIds.length) {
+                    return res.status(400).json({ error: 'One or more folders not found' });
+                }
+            }
+            video.folders = validFolderIds;
+        }
+
         await video.save();
         res.json({ success: true, video });
     } catch (err) {
@@ -409,7 +612,7 @@ app.get('/api/admin/video-settings', authenticateJWT, requireAdmin, async (req, 
 
 // Admin: list all videos
 app.get('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) => {
-    const videos = await Video.find().sort({ createdAt: -1 }).select('-__v');
+    const videos = await Video.find().sort({ createdAt: -1 }).populate('folders', 'name parentFolder').select('-__v');
     res.json(videos);
 });
 
