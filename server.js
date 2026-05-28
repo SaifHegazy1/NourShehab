@@ -168,21 +168,14 @@ const initData = async () => {
     const settings = await VideoSettings.findOne();
     if (!settings) await VideoSettings.create({ youtubeId: 'M7lc1UVf-VE', title: 'Introduction to Course' });
 
-    const seedVideos = [
-        { youtubeId: 'M7lc1UVf-VE', title: 'Introduction to Course', description: 'Available test video' },
-        { youtubeId: '2vjPBrBU-TM', title: 'Lesson 1: Basics', description: 'Foundations and basics' },
-        { youtubeId: 'sBws8MSXN7A', title: 'Lesson 2: Practice', description: 'Practice exercises' },
-        { youtubeId: 'Ww6odBZeAZs', title: 'New Lesson Added', description: 'User-requested video added to library' }
-    ];
-
-    for (const videoData of seedVideos) {
-        const existingVideo = await Video.findOne({ youtubeId: videoData.youtubeId });
-        if (!existingVideo) {
-            await Video.create(videoData);
-        }
+    const existingVideoCount = await Video.countDocuments();
+    if (existingVideoCount === 0) {
+        const seedVideos = [
+            { youtubeId: 'M7lc1UVf-VE', title: 'Introduction to Course', description: 'Available test video' }
+        ];
+        await Video.insertMany(seedVideos);
+        console.log('Seeded default videos');
     }
-
-    console.log('Ensured default videos exist');
 
     const profile = await TutorProfile.findOne();
     if (!profile) await TutorProfile.create({ name: 'Eng: Nour Shehab', about: 'Welcome! I am an engineering educator with over 10 years of experience.', photoUrl: '' });
