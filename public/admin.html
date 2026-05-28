@@ -206,6 +206,41 @@
             width: 80px
         }
 
+        .material-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .material-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .material-row input {
+            width: 100%;
+            border-radius: 20px;
+            padding: 0.6rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+        }
+
+        .material-row button {
+            white-space: nowrap;
+            padding: 0.55rem 0.9rem;
+            border-radius: 24px;
+            background: #ef4444;
+            border: none;
+        }
+
+        .material-row button:hover {
+            opacity: 0.95;
+        }
+
         .message {
             padding: 0.8rem;
             border-radius: 24px;
@@ -261,6 +296,12 @@
                     id="newVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
             <div class="form-group"><label>Video Title</label><input type="text" id="newVideoTitle"></div>
             <div class="form-group"><label>Description</label><textarea id="newVideoDesc" rows="2"></textarea></div>
+            <div class="form-group">
+                <label>Material resources (optional)</label>
+                <div id="newVideoMaterialsContainer"></div>
+                <button type="button" id="addNewVideoMaterialBtn">Add material link</button>
+                <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable resources for the lesson.</small>
+            </div>
             <div class="form-group"><label>Select Folders</label>
                 <select id="newVideoFolderSelect" multiple size="5"></select>
                 <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple folders.</small>
@@ -298,6 +339,7 @@
                         <tr>
                             <th>Title</th>
                             <th>YouTube ID</th>
+                            <th>Material</th>
                             <th>Folders</th>
                             <th>Views</th>
                             <th>Actions</th>
@@ -306,6 +348,26 @@
                     <tbody id="videosLibraryList"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="card" id="editVideoCard" style="display:none">
+            <h2>✏️ Edit Video</h2>
+            <input type="hidden" id="editVideoId">
+            <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text" id="editVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+            <div class="form-group"><label>Video Title</label><input type="text" id="editVideoTitle"></div>
+            <div class="form-group"><label>Description</label><textarea id="editVideoDesc" rows="2"></textarea></div>
+            <div class="form-group">
+                <label>Material resources (optional)</label>
+                <div id="editVideoMaterialsContainer"></div>
+                <button type="button" id="addEditVideoMaterialBtn">Add material link</button>
+                <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable resources for the lesson.</small>
+            </div>
+            <div class="form-group"><label>Select Folders</label>
+                <select id="editVideoFolderSelect" multiple size="5"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple folders.</small>
+            </div>
+            <button id="saveEditedVideoBtn">Save Changes</button>
+            <button id="cancelEditVideoBtn" type="button" class="danger">Cancel</button>
         </div>
 
         <div class="card">
@@ -398,6 +460,54 @@
             return /^[a-zA-Z0-9_-]{11}$/.test(id);
         }
 
+        function createMaterialRow(material = {}) {
+            const row = document.createElement('div');
+            row.className = 'material-row';
+
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'material-title-input';
+            titleInput.placeholder = 'Title (optional)';
+            titleInput.value = material.title || '';
+
+            const linkInput = document.createElement('input');
+            linkInput.type = 'text';
+            linkInput.className = 'material-link-input';
+            linkInput.placeholder = 'https://example.com/material.pdf';
+            linkInput.value = material.link || '';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => row.remove();
+
+            row.appendChild(titleInput);
+            row.appendChild(linkInput);
+            row.appendChild(removeBtn);
+            return row;
+        }
+
+        function resetMaterials(containerId, materials = []) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            if (materials.length === 0) {
+                container.appendChild(createMaterialRow());
+                return;
+            }
+            materials.forEach(material => container.appendChild(createMaterialRow(material)));
+        }
+
+        function gatherMaterials(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            return Array.from(container.querySelectorAll('.material-row')).map(row => {
+                const title = row.querySelector('.material-title-input')?.value.trim() || '';
+                const link = row.querySelector('.material-link-input')?.value.trim() || '';
+                return { title, link };
+            }).filter(item => item.link);
+        }
+
         let adminToken = localStorage.getItem('adminToken');
         const loginModal = document.getElementById('loginModal');
         const adminContainer = document.getElementById('adminContainer');
@@ -450,6 +560,9 @@
             loadAll();
         }
 
+        document.getElementById('addNewVideoMaterialBtn').onclick = () => resetMaterials('newVideoMaterialsContainer', [...gatherMaterials('newVideoMaterialsContainer'), { title: '', link: '' }]);
+        document.getElementById('addEditVideoMaterialBtn').onclick = () => resetMaterials('editVideoMaterialsContainer', [...gatherMaterials('editVideoMaterialsContainer'), { title: '', link: '' }]);
+
         function logoutAdmin() {
             localStorage.removeItem('adminToken');
             adminToken = null;
@@ -476,6 +589,8 @@
 
         async function loadAll() {
             try {
+                resetMaterials('newVideoMaterialsContainer');
+                resetMaterials('editVideoMaterialsContainer');
                 await loadVideoSettings();
                 await loadTutorProfile();
                 await loadStudents();
@@ -589,9 +704,16 @@
                 const row = tbody.insertRow();
                 row.insertCell(0).textContent = v.title || 'Untitled';
                 row.insertCell(1).textContent = v.youtubeId;
-                row.insertCell(2).textContent = Array.isArray(v.folders) && v.folders.length > 0 ? v.folders.map(f => f.name).join(', ') : 'Root';
-                row.insertCell(3).textContent = v.viewCount || 0;
-                const actionsCell = row.insertCell(4);
+                const materialCell = row.insertCell(2);
+                const materials = Array.isArray(v.materials) && v.materials.length > 0 ? v.materials : (v.materialLink ? [{ title: v.materialTitle || 'Material', link: v.materialLink }] : []);
+                if (materials.length > 0) {
+                    materialCell.innerHTML = materials.map(item => `<div><a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title || 'Material'}</a></div>`).join('');
+                } else {
+                    materialCell.textContent = '—';
+                }
+                row.insertCell(3).textContent = Array.isArray(v.folders) && v.folders.length > 0 ? v.folders.map(f => f.name).join(', ') : 'Root';
+                row.insertCell(4).textContent = v.viewCount || 0;
+                const actionsCell = row.insertCell(5);
                 const editBtn = document.createElement('button');
                 editBtn.type = 'button';
                 editBtn.textContent = 'Edit';
@@ -612,6 +734,7 @@
             document.getElementById('editVideoYoutubeId').value = video.youtubeId || '';
             document.getElementById('editVideoTitle').value = video.title || '';
             document.getElementById('editVideoDesc').value = video.description || '';
+            resetMaterials('editVideoMaterialsContainer', Array.isArray(video.materials) && video.materials.length > 0 ? video.materials : (video.materialLink ? [{ title: video.materialTitle || 'Material', link: video.materialLink }] : []));
             const folderSelect = document.getElementById('editVideoFolderSelect');
             if (folderSelect) {
                 const selectedIds = Array.isArray(video.folders) ? video.folders.map(f => f._id.toString()) : [];
@@ -630,6 +753,7 @@
             document.getElementById('editVideoYoutubeId').value = '';
             document.getElementById('editVideoTitle').value = '';
             document.getElementById('editVideoDesc').value = '';
+            resetMaterials('editVideoMaterialsContainer');
             const folderSelect = document.getElementById('editVideoFolderSelect');
             if (folderSelect) {
                 Array.from(folderSelect.options).forEach(opt => opt.selected = false);
@@ -638,16 +762,24 @@
 
         async function saveEditedVideo() {
             const videoId = document.getElementById('editVideoId').value;
+            const editYoutubeInput = document.getElementById('editVideoYoutubeId').value;
+            const youtubeId = extractYouTubeId(editYoutubeInput);
             const title = document.getElementById('editVideoTitle').value.trim();
             const description = document.getElementById('editVideoDesc').value;
+            const materials = gatherMaterials('editVideoMaterialsContainer');
             const folderSelect = document.getElementById('editVideoFolderSelect');
             const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
             if (!videoId) { showMessage('No video selected to edit', true); return; }
+            if (!youtubeId) { showMessage('Enter YouTube ID or URL', true); return; }
+            if (!isValidYouTubeId(youtubeId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; }
             if (!title) { showMessage('Video title cannot be empty', true); return; }
+            const payload = { videoId, youtubeId, title, description, materials, folderIds };
+            payload.materialTitle = materials[0]?.title || '';
+            payload.materialLink = materials[0]?.link || '';
             const r = await fetchAdmin('/api/admin/update-video', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videoId, title, description, folderIds })
+                body: JSON.stringify(payload)
             });
             const data = await r.json();
             if (r.ok) {
@@ -712,7 +844,7 @@
             }
         }
         document.getElementById('updateVideoBtn').onclick = async () => { const videoInput = document.getElementById('youtubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('videoTitle').value, description: document.getElementById('videoDesc').value }; const r = await fetchAdmin('/api/admin/video-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { document.getElementById('youtubeId').value = videoId; showMessage(`✅ Default video saved! ID: ${videoId}`, false); } else { const err = await r.json(); showMessage(err.error || 'Error updating video', true); } };
-        document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const folderSelect = document.getElementById('newVideoFolderSelect'); const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : []; const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value, folderIds }; const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; if (folderSelect) folderSelect.selectedIndex = -1; loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
+        document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const folderSelect = document.getElementById('newVideoFolderSelect'); const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : []; const materials = gatherMaterials('newVideoMaterialsContainer'); const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value, materials, folderIds }; if (materials.length > 0) { data.materialTitle = materials[0].title || ''; data.materialLink = materials[0].link || ''; } const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; if (folderSelect) folderSelect.selectedIndex = -1; resetMaterials('newVideoMaterialsContainer'); loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
         document.getElementById('createFolderBtn').onclick = async () => {
             const name = document.getElementById('newFolderName').value.trim();
             let parentFolderId = document.getElementById('parentFolderSelect').value;

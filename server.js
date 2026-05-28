@@ -60,6 +60,9 @@ const videoSchema = new mongoose.Schema({
     youtubeId: { type: String, required: true },
     title: { type: String, default: 'Educational Video' },
     description: { type: String, default: '' },
+    materialTitle: { type: String, default: '' },
+    materialLink: { type: String, default: '' },
+    materials: [{ title: { type: String, default: '' }, link: { type: String, default: '' } }],
     folders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Folder' }],
     viewCount: { type: Number, default: 0, min: 0 },
     createdAt: { type: Date, default: Date.now }
@@ -113,6 +116,61 @@ const extractYouTubeId = (input) => {
     if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
     const match = trimmed.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/);
     return match ? match[1] : null;
+};
+
+const buildMaterialsFromPayload = (payload) => {
+    let rawMaterials = [];
+    if (typeof payload.materials === 'string') {
+        try {
+            const parsed = JSON.parse(payload.materials);
+            rawMaterials = Array.isArray(parsed) ? parsed : (parsed && typeof parsed === 'object' ? [parsed] : []);
+        } catch {
+            rawMaterials = [];
+        }
+    } else if (Array.isArray(payload.materials)) {
+        rawMaterials = payload.materials;
+    } else if (payload.materials && typeof payload.materials === 'object') {
+        rawMaterials = [payload.materials];
+    }
+
+    if (rawMaterials.length > 0) {
+        return rawMaterials.map(item => {
+            const title = typeof item?.title === 'string' ? item.title.trim() : '';
+            let link = typeof item?.link === 'string' ? item.link.trim() : '';
+            if (link && !/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(link)) {
+                link = `https://${link}`;
+            }
+            return { title, link };
+        }).filter(item => item.link);
+    }
+
+    const materialLink = typeof payload.materialLink === 'string' ? payload.materialLink.trim() : '';
+    const materialTitle = typeof payload.materialTitle === 'string' ? payload.materialTitle.trim() : '';
+    const normalizedLink = materialLink && !/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(materialLink) ? `https://${materialLink}` : materialLink;
+    return normalizedLink ? [{ title: materialTitle, link: normalizedLink }] : [];
+};
+
+const validateMaterials = (materials) => {
+    for (const material of materials) {
+        if (!material.link) continue;
+        try {
+            const parsed = new URL(material.link);
+            if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
+        } catch {
+            return false;
+        }
+    }
+    return true;
+};
+
+const buildFallbackMaterials = (video) => {
+    if (Array.isArray(video.materials) && video.materials.length > 0) {
+        return video.materials;
+    }
+    if (video.materialLink) {
+        return [{ title: video.materialTitle || 'Material', link: video.materialLink }];
+    }
+    return [];
 };
 
 const buildFolderTree = (folders, videos = []) => {
@@ -291,7 +349,20 @@ app.post('/api/student/consume-view-for-video', authenticateJWT, requireStudent,
         const newToken = jwt.sign({ id: user._id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
         const origin = encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000');
         const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
-        res.json({ success: true, remainingViews: user.allowedViews, newToken, embedHtml, video: { id: video._id, viewCount: video.viewCount, title: video.title, youtubeId: video.youtubeId }, usedFromPerVideo });
+        res.json({
+            success: true,
+            remainingViews: user.allowedViews,
+            newToken,
+            embedHtml,
+            video: {
+                id: video._id,
+                viewCount: video.viewCount,
+                title: video.title,
+                youtubeId: video.youtubeId,
+                materials: buildFallbackMaterials(video)
+            },
+            usedFromPerVideo
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -421,7 +492,11 @@ app.post('/api/admin/videos/assign-folders', authenticateJWT, requireAdmin, asyn
 app.get('/api/student/folders', authenticateJWT, requireStudent, async (req, res) => {
     try {
         const folders = await Folder.find().sort({ createdAt: 1 }).lean();
-        const videos = await Video.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
+        let videos = await Video.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
+        videos = videos.map(video => ({
+            ...video,
+            materials: buildFallbackMaterials(video)
+        }));
         const tree = buildFolderTree(folders, videos);
         res.json(tree);
     } catch (err) {
@@ -527,7 +602,19 @@ app.post('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) =>
         const resp = await fetch(oembedUrl, { method: 'GET' });
         if (!resp.ok) return res.status(400).json({ error: 'Video does not allow embedding or is invalid' });
 
-        const video = await Video.create({ youtubeId, title: req.body.title || 'Untitled Video', description: req.body.description || '', folders: folderIds });
+        const materials = buildMaterialsFromPayload(req.body);
+        if (!validateMaterials(materials)) {
+            return res.status(400).json({ error: 'Each material link must be a valid URL starting with http:// or https://' });
+        }
+        const video = await Video.create({
+            youtubeId,
+            title: req.body.title || 'Untitled Video',
+            description: req.body.description || '',
+            materialTitle: materials[0]?.title || '',
+            materialLink: materials[0]?.link || '',
+            materials,
+            folders: folderIds
+        });
         res.json({ success: true, video });
     } catch (err) {
         console.error(err);
@@ -538,7 +625,7 @@ app.post('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) =>
 // Validate a YouTube video is embeddable using oEmbed, then update a Video document
 app.post('/api/admin/update-video', authenticateJWT, requireAdmin, async (req, res) => {
     try {
-        const { videoId, youtubeId, title, description, folderIds } = req.body;
+        const { videoId, youtubeId, title, description, folderIds, materials, materialTitle, materialLink } = req.body;
         if (!videoId || !youtubeId) return res.status(400).json({ error: 'videoId and youtubeId required' });
 
         // Validate embeddable via YouTube oEmbed
@@ -551,6 +638,16 @@ app.post('/api/admin/update-video', authenticateJWT, requireAdmin, async (req, r
         video.youtubeId = youtubeId;
         if (title !== undefined) video.title = title;
         if (description !== undefined) video.description = description;
+
+        if (materials !== undefined || materialLink !== undefined) {
+            const newMaterials = buildMaterialsFromPayload(req.body);
+            if (!validateMaterials(newMaterials)) {
+                return res.status(400).json({ error: 'Each material link must be a valid URL starting with http:// or https://' });
+            }
+            video.materials = newMaterials;
+            video.materialTitle = newMaterials[0]?.title || '';
+            video.materialLink = newMaterials[0]?.link || '';
+        }
 
         if (folderIds !== undefined) {
             const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
@@ -612,8 +709,12 @@ app.get('/api/admin/video-settings', authenticateJWT, requireAdmin, async (req, 
 
 // Admin: list all videos
 app.get('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) => {
-    const videos = await Video.find().sort({ createdAt: -1 }).populate('folders', 'name parentFolder').select('-__v');
-    res.json(videos);
+    const videos = await Video.find().sort({ createdAt: -1 }).populate('folders', 'name parentFolder').select('-__v').lean();
+    const normalized = videos.map(video => ({
+        ...video,
+        materials: buildFallbackMaterials(video)
+    }));
+    res.json(normalized);
 });
 
 // Tutor Profile routes

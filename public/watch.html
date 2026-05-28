@@ -74,6 +74,9 @@
             gap: 1rem;
         }
         .video-title{color:#f1f5f9;font-weight:600}
+        .material-link{color:#a5f3fc;font-size:0.95rem;margin-top:0.4rem;}
+        .material-link a{color:#38bdf8;text-decoration:none;}
+        .material-link a:hover{text-decoration:underline;}
         .views-info{
             background: #0ea5e9;
             padding: 0.3rem 1rem;
@@ -288,7 +291,10 @@
             </div>
         </div>
         <div class="info-bar">
+            <div>
             <div class="video-title" id="videoTitle">Loading lesson...</div>
+            <div id="materialLinkContainer" class="material-link"></div>
+        </div>
             <div class="views-info" id="viewsInfo">🎬 Views: --</div>
             <button class="btn-outline" id="changePwdBtn">Change Password</button>
         </div>
@@ -493,6 +499,30 @@
             title.style.fontWeight = '600';
             title.style.fontSize = '0.95rem';
             title.innerText = v.title || 'Untitled';
+            const materials = Array.isArray(v.materials) && v.materials.length > 0 ? v.materials : (v.materialLink ? [{ title: v.materialTitle || 'Material', link: v.materialLink }] : []);
+            const materialBlock = document.createElement('div');
+            if (materials.length > 0) {
+                materialBlock.style.display = 'flex';
+                materialBlock.style.flexDirection = 'column';
+                materialBlock.style.gap = '0.25rem';
+                materialBlock.style.fontSize = '0.82rem';
+                materialBlock.style.color = '#94a3b8';
+                const label = document.createElement('div');
+                label.textContent = 'Resources:';
+                label.style.fontWeight = '600';
+                label.style.color = '#cbd5e1';
+                materialBlock.appendChild(label);
+                materials.forEach(item => {
+                    const link = document.createElement('a');
+                    link.href = item.link;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.style.color = '#38bdf8';
+                    link.style.textDecoration = 'none';
+                    link.textContent = item.title || 'Material';
+                    materialBlock.appendChild(link);
+                });
+            }
             const info = document.createElement('div');
             info.style.color = '#94a3b8';
             info.style.fontSize = '0.85rem';
@@ -505,6 +535,7 @@
             btn.onclick = () => consumeForVideo(v._id, v.title, btn, info);
             card.appendChild(thumb);
             card.appendChild(title);
+            if (materials.length > 0) card.appendChild(materialBlock);
             card.appendChild(info);
             card.appendChild(btn);
             return card;
@@ -828,6 +859,15 @@
             document.getElementById('videoTitle').innerText = title || 'Lesson';
             document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
             infoEl.innerText = `Allocated: ${remaining} view${remaining===1?'':'s'}`;
+            const materialContainer = document.getElementById('materialLinkContainer');
+            if (materialContainer) {
+                const materials = Array.isArray(data.video?.materials) && data.video.materials.length > 0 ? data.video.materials : (data.video?.materialLink ? [{ title: data.video.materialTitle || 'View material', link: data.video.materialLink }] : []);
+                if (materials.length > 0) {
+                    materialContainer.innerHTML = materials.map(item => `<div><a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title || 'View material'}</a></div>`).join('');
+                } else {
+                    materialContainer.innerHTML = '';
+                }
+            }
             // Pass youtubeId to renderPlayerOverlay
             renderPlayerOverlay(data.embedHtml, data.video?.youtubeId || '');
         }
