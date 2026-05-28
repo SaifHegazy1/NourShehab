@@ -388,6 +388,20 @@
             <button id="createQuizBtn">Add Quiz</button>
         </div>
 
+        <div class="card" id="editQuizCard" style="display:none">
+            <h2>✏️ Edit Quiz</h2>
+            <input type="hidden" id="editQuizId">
+            <div class="form-group"><label>Quiz Title</label><input type="text" id="editQuizTitle"></div>
+            <div class="form-group"><label>Quiz Description</label><textarea id="editQuizDescription" rows="3"></textarea></div>
+            <div class="form-group"><label>Quiz Link</label><input type="text" id="editQuizLink" placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
+            <div class="form-group"><label>Select Folder</label>
+                <select id="editQuizFolderSelect" multiple size="5"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to assign to one or more folders.</small>
+            </div>
+            <button id="saveEditedQuizBtn">Save Changes</button>
+            <button id="cancelEditQuizBtn" type="button" class="danger">Cancel</button>
+        </div>
+
         <div class="card">
             <h2>📚 Quiz Library</h2>
             <div style="overflow-x:auto">
