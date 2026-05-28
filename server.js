@@ -458,7 +458,8 @@ app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) =
         
         const folder = await Folder.create({ 
             name: name.trim(), 
-            parentFolder: parentFolder ? parentFolder._id : null 
+            parentFolder: parentFolder ? parentFolder._id : null,
+            folderType
         });
         
         res.json({ success: true, folder });

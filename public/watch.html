@@ -498,6 +498,68 @@
             }
         }
 
+        function renderFolderSection(folder, level) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'folder-card';
+            wrapper.style.paddingLeft = `${level * 14}px`;
+
+            const header = document.createElement('div');
+            header.className = 'folder-header';
+
+            const titleBlock = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'folder-title';
+            title.textContent = folder.name || 'Unnamed Folder';
+            const meta = document.createElement('div');
+            meta.className = 'folder-meta';
+            const itemCount = (Array.isArray(folder.videos) ? folder.videos.length : 0) + (Array.isArray(folder.children) ? folder.children.length : 0);
+            meta.textContent = itemCount > 0 ? `${itemCount} item${itemCount === 1 ? '' : 's'}` : 'Empty folder';
+            titleBlock.appendChild(title);
+            titleBlock.appendChild(meta);
+
+            const toggle = document.createElement('button');
+            toggle.className = 'folder-toggle';
+            toggle.textContent = 'View';
+
+            header.appendChild(titleBlock);
+            header.appendChild(toggle);
+            wrapper.appendChild(header);
+
+            const content = document.createElement('div');
+            content.className = 'folder-content';
+            content.style.display = 'none';
+            content.style.paddingTop = '0.75rem';
+
+            if (Array.isArray(folder.videos) && folder.videos.length > 0) {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.flexWrap = 'wrap';
+                row.style.gap = '1rem';
+                folder.videos.forEach(video => row.appendChild(renderVideoCard(video)));
+                content.appendChild(row);
+            }
+
+            if (Array.isArray(folder.children) && folder.children.length > 0) {
+                folder.children.forEach(child => content.appendChild(renderFolderSection(child, level + 1)));
+            }
+
+            if (content.children.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'folder-empty';
+                empty.textContent = 'This folder has no lessons yet.';
+                content.appendChild(empty);
+            }
+
+            header.onclick = () => {
+                const visible = content.style.display === 'block';
+                content.style.display = visible ? 'none' : 'block';
+                toggle.textContent = visible ? 'View' : 'Hide';
+            };
+
+            wrapper.appendChild(content);
+            return wrapper;
+        }
+
         async function loadVideos() {
             const res = await apiFetch('/api/student/folders', { headers: { 'Authorization': `Bearer ${token}` } });
             const container = document.getElementById('videosList');
