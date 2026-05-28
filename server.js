@@ -68,6 +68,15 @@ const videoSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+const quizSchema = new mongoose.Schema({
+    title: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    link: { type: String, required: true, trim: true },
+    folders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Folder' }],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
 const folderSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     parentFolder: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', default: null },
@@ -86,6 +95,7 @@ const VideoSettings = mongoose.model('VideoSettings', videoSettingsSchema);
 const TutorProfile = mongoose.model('TutorProfile', tutorProfileSchema);
 const Folder = mongoose.model('Folder', folderSchema);
 const Video = mongoose.model('Video', videoSchema);
+const Quiz = mongoose.model('Quiz', quizSchema);
 
 // ==================== MIDDLEWARE ====================
 const authenticateJWT = (req, res, next) => {
@@ -204,6 +214,39 @@ const buildFolderTree = (folders, videos = []) => {
     });
 
     return { folders: roots, unassignedVideos: unassigned };
+};
+
+const buildFolderTreeForQuizzes = (folders, quizzes = []) => {
+    const folderMap = {};
+    folders.forEach(folder => {
+        folderMap[folder._id.toString()] = { ...folder.toObject ? folder.toObject() : folder, children: [], quizzes: [] };
+    });
+
+    const unassigned = [];
+    quizzes.forEach(quiz => {
+        const assignedIds = Array.isArray(quiz.folders) ? quiz.folders.map(f => f? f._id.toString() : null).filter(Boolean) : [];
+        if (assignedIds.length === 0) {
+            unassigned.push(quiz);
+            return;
+        }
+        assignedIds.forEach(folderId => {
+            if (folderMap[folderId]) {
+                folderMap[folderId].quizzes.push(quiz);
+            }
+        });
+    });
+
+    const roots = [];
+    folders.forEach(folder => {
+        const parentId = folder.parentFolder ? folder.parentFolder.toString ? folder.parentFolder.toString() : '' : null;
+        if (parentId && folderMap[parentId]) {
+            folderMap[parentId].children.push(folderMap[folder._id.toString()]);
+        } else {
+            roots.push(folderMap[folder._id.toString()]);
+        }
+    });
+
+    return { folders: roots, unassignedQuizzes: unassigned };
 };
 
 const collectDescendantFolderIds = async (folderId) => {
@@ -505,6 +548,18 @@ app.get('/api/student/folders', authenticateJWT, requireStudent, async (req, res
     }
 });
 
+app.get('/api/student/quizzes', authenticateJWT, requireStudent, async (req, res) => {
+    try {
+        const folders = await Folder.find().sort({ createdAt: 1 }).lean();
+        const quizzes = await Quiz.find().populate('folders', 'name parentFolder').sort({ createdAt: -1 }).lean();
+        const tree = buildFolderTreeForQuizzes(folders, quizzes);
+        res.json(tree);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.post('/api/admin/add-views', authenticateJWT, requireAdmin, async (req, res) => {
     res.status(400).json({ error: 'Global total views are disabled. Assign views to specific videos only.' });
 });
@@ -715,6 +770,46 @@ app.get('/api/admin/videos', authenticateJWT, requireAdmin, async (req, res) => 
         materials: buildFallbackMaterials(video)
     }));
     res.json(normalized);
+});
+
+app.get('/api/admin/quizzes', authenticateJWT, requireAdmin, async (req, res) => {
+    const quizzes = await Quiz.find().sort({ createdAt: -1 }).populate('folders', 'name parentFolder').select('-__v').lean();
+    res.json(quizzes);
+});
+
+app.post('/api/admin/quizzes', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { title, description, link, folderIds } = req.body;
+        if (!title || !title.trim()) return res.status(400).json({ error: 'Quiz title is required' });
+        if (!link || typeof link !== 'string' || !link.trim()) return res.status(400).json({ error: 'Quiz link is required' });
+        let normalizedLink = link.trim();
+        if (!/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(normalizedLink)) {
+            normalizedLink = `https://${normalizedLink}`;
+        }
+        try { new URL(normalizedLink); } catch { return res.status(400).json({ error: 'Invalid quiz link URL' }); }
+
+        const validFolderIds = Array.isArray(folderIds) ? folderIds.filter(id => mongoose.Types.ObjectId.isValid(id)) : [];
+        if (folderIds && validFolderIds.length !== folderIds.length) {
+            return res.status(400).json({ error: 'One or more invalid folder IDs provided' });
+        }
+        if (validFolderIds.length > 0) {
+            const foundFolders = await Folder.find({ _id: { $in: validFolderIds } }).select('_id');
+            if (foundFolders.length !== validFolderIds.length) {
+                return res.status(400).json({ error: 'One or more folders not found' });
+            }
+        }
+
+        const quiz = await Quiz.create({
+            title: title.trim(),
+            description: description ? description.toString().trim() : '',
+            link: normalizedLink,
+            folders: validFolderIds
+        });
+        res.json({ success: true, quiz });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // Tutor Profile routes

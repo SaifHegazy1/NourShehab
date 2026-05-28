@@ -97,6 +97,106 @@
             border-color: #38bdf8;
             color: #38bdf8;
         }
+        .tab-bar{
+            display:flex;
+            gap:0.5rem;
+            justify-content:center;
+            padding:1rem 2rem;
+            background:#0f172a;
+            border-bottom:1px solid #1e293b;
+        }
+        .tab-button{
+            background:transparent;
+            border:1px solid #334155;
+            color:#cbd5e1;
+            padding:0.65rem 1.2rem;
+            border-radius:999px;
+            cursor:pointer;
+            font-weight:700;
+            transition:all 0.2s;
+        }
+        .tab-button.active,
+        .tab-button:hover{
+            border-color:#38bdf8;
+            color:#38bdf8;
+        }
+        .quiz-panel{
+            max-width:1100px;
+            margin:2rem auto;
+            padding:1rem;
+            background:#0f172a;
+            border:1px solid #1e293b;
+            border-radius:32px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.5);
+        }
+        .quiz-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+            gap:1rem;
+        }
+        .quiz-card{
+            background:#071022;
+            border:1px solid #0f172a;
+            border-radius:16px;
+            padding:1rem;
+            display:flex;
+            flex-direction:column;
+            gap:0.75rem;
+        }
+        .quiz-card h3{
+            color:#e2e8f0;
+            margin-bottom:0.25rem;
+            font-size:1rem;
+        }
+        .quiz-card p{
+            color:#94a3b8;
+            line-height:1.4;
+            font-size:0.92rem;
+        }
+        .quiz-card small{
+            color:#64748b;
+            font-size:0.78rem;
+        }
+        .quiz-card a,
+        .quiz-card button{
+            color:#38bdf8;
+        }
+        .quiz-card button{
+            background:transparent;
+            border:1px solid #334155;
+            border-radius:999px;
+            padding:0.6rem 1rem;
+            cursor:pointer;
+            width:max-content;
+            transition:all 0.2s;
+        }
+        .quiz-card button:hover{
+            border-color:#38bdf8;
+            color:#7dd3fc;
+        }
+        .quiz-info-panel{
+            margin-top:1rem;
+            background:#071022;
+            border:1px solid #0f172a;
+            border-radius:16px;
+            padding:1rem;
+            color:#cbd5e1;
+        }
+        .quiz-info-panel h3{
+            margin-bottom:0.5rem;
+            color:#e2e8f0;
+        }
+        .quiz-info-panel p{
+            margin-bottom:1rem;
+            line-height:1.6;
+        }
+        .quiz-info-panel a{
+            color:#38bdf8;
+            text-decoration:none;
+        }
+        .quiz-info-panel a:hover{
+            text-decoration:underline;
+        }
         .change-password-panel{
             display: none;
             background: #0f172a;
@@ -258,7 +358,11 @@
         <div class="logo">📐 ENG NOUR SHEHAB | MATH CAPSULE</div>
         <div><a href="/about">About</a><a href="/student" id="logoutLink">Logout</a></div>
     </div>
-    <div class="video-container">
+    <div class="tab-bar">
+        <button id="watchTabBtn" class="tab-button active">Watch</button>
+        <button id="quizTabBtn" class="tab-button">Quizzes</button>
+    </div>
+    <div class="video-container" id="watchPanel">
         <div id="videosList" style="padding:1rem;display:flex;gap:1rem;flex-wrap:wrap;background:#071022;border-bottom:1px solid #0f172a"></div>
         <div class="video-wrapper player-wrapper" id="playerWrapper">
             <div id="playerContainer"></div>
@@ -310,6 +414,11 @@
             <button class="btn-outline" id="submitChangePwdBtn">Save Password</button>
             <div class="change-password-message" id="changePwdMessage"></div>
         </div>
+    </div>
+
+    <div class="quiz-panel" id="quizPanel" style="display:none;">
+        <div id="quizzesList" class="quiz-grid"></div>
+        <div class="quiz-info-panel" id="quizInfoPanel" style="display:none;"></div>
     </div>
 
     <script>
@@ -427,7 +536,63 @@
             document.getElementById('viewsInfo').innerText = '🎬 Browse folders to find your lesson';
         }
 
-        function renderFolderSection(folder, level) {
+        async function loadQuizzes() {
+            const res = await apiFetch('/api/student/quizzes', { headers: { 'Authorization': `Bearer ${token}` } });
+            const container = document.getElementById('quizzesList');
+            const infoPanel = document.getElementById('quizInfoPanel');
+            container.innerHTML = '';
+            infoPanel.style.display = 'none';
+            if (!res.ok) {
+                const error = document.createElement('div');
+                error.style.color = '#f87171';
+                error.textContent = 'Unable to load quizzes. Please refresh.';
+                container.appendChild(error);
+                return;
+            }
+            const data = await res.json();
+            if (Array.isArray(data.folders) && data.folders.length > 0) {
+                data.folders.forEach(folder => container.appendChild(renderQuizFolderSection(folder, 0)));
+            }
+            if (Array.isArray(data.unassignedQuizzes) && data.unassignedQuizzes.length > 0) {
+                const section = document.createElement('div');
+                section.className = 'folder-card';
+                const header = document.createElement('div');
+                header.className = 'folder-header';
+                const titleBlock = document.createElement('div');
+                const title = document.createElement('div');
+                title.className = 'folder-title';
+                title.textContent = `Unassigned Quizzes (${data.unassignedQuizzes.length})`;
+                titleBlock.appendChild(title);
+                const toggle = document.createElement('button');
+                toggle.className = 'folder-toggle';
+                toggle.textContent = 'View';
+                header.appendChild(titleBlock);
+                header.appendChild(toggle);
+                const content = document.createElement('div');
+                content.className = 'folder-content';
+                content.style.display = 'none';
+                const grid = document.createElement('div');
+                grid.className = 'quiz-grid';
+                data.unassignedQuizzes.forEach(quiz => grid.appendChild(renderQuizCard(quiz)));
+                content.appendChild(grid);
+                section.appendChild(header);
+                section.appendChild(content);
+                header.onclick = () => {
+                    const visible = content.style.display === 'block';
+                    content.style.display = visible ? 'none' : 'block';
+                    toggle.textContent = visible ? 'View' : 'Hide';
+                };
+                container.appendChild(section);
+            }
+            if (container.childElementCount === 0) {
+                const empty = document.createElement('div');
+                empty.style.color = '#94a3b8';
+                empty.textContent = 'No quizzes have been added yet.';
+                container.appendChild(empty);
+            }
+        }
+
+        function renderQuizFolderSection(folder, level) {
             const wrapper = document.createElement('div');
             wrapper.className = 'folder-card';
             wrapper.style.paddingLeft = `${level * 14}px`;
@@ -439,7 +604,7 @@
             title.textContent = folder.name;
             const meta = document.createElement('div');
             meta.className = 'folder-meta';
-            const totalCount = (Array.isArray(folder.videos) ? folder.videos.length : 0) + (Array.isArray(folder.children) ? folder.children.length : 0);
+            const totalCount = (Array.isArray(folder.quizzes) ? folder.quizzes.length : 0) + (Array.isArray(folder.children) ? folder.children.length : 0);
             meta.textContent = totalCount > 0 ? `${totalCount} item${totalCount === 1 ? '' : 's'}` : 'Empty folder';
             titleBlock.appendChild(title);
             titleBlock.appendChild(meta);
@@ -453,21 +618,19 @@
             content.className = 'folder-content';
             content.style.display = 'none';
             content.style.paddingTop = '0.75rem';
-            if (Array.isArray(folder.videos) && folder.videos.length > 0) {
-                const row = document.createElement('div');
-                row.style.display = 'flex';
-                row.style.flexWrap = 'wrap';
-                row.style.gap = '1rem';
-                folder.videos.forEach(v => row.appendChild(renderVideoCard(v)));
-                content.appendChild(row);
+            if (Array.isArray(folder.quizzes) && folder.quizzes.length > 0) {
+                const grid = document.createElement('div');
+                grid.className = 'quiz-grid';
+                folder.quizzes.forEach(quiz => grid.appendChild(renderQuizCard(quiz)));
+                content.appendChild(grid);
             }
             if (Array.isArray(folder.children) && folder.children.length > 0) {
-                folder.children.forEach(child => content.appendChild(renderFolderSection(child, level + 1)));
+                folder.children.forEach(child => content.appendChild(renderQuizFolderSection(child, level + 1)));
             }
             if (content.children.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'folder-empty';
-                empty.textContent = 'This folder has no lessons or subfolders yet.';
+                empty.textContent = 'This folder has no quizzes yet.';
                 content.appendChild(empty);
             }
             header.onclick = () => {
@@ -477,6 +640,65 @@
             };
             wrapper.appendChild(content);
             return wrapper;
+        }
+
+        function renderQuizCard(quiz) {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            const title = document.createElement('h3');
+            title.textContent = quiz.title || 'Untitled Quiz';
+            const description = document.createElement('p');
+            description.textContent = quiz.description ? quiz.description : 'Click to view quiz details.';
+            const created = document.createElement('small');
+            created.textContent = `Added ${new Date(quiz.createdAt).toLocaleDateString()}`;
+            const action = document.createElement('button');
+            action.type = 'button';
+            action.textContent = 'View Details';
+            action.onclick = () => showQuizDetails(quiz);
+            card.appendChild(title);
+            card.appendChild(description);
+            card.appendChild(created);
+            card.appendChild(action);
+            return card;
+        }
+
+        function showQuizDetails(quiz) {
+            const panel = document.getElementById('quizInfoPanel');
+            panel.innerHTML = '';
+            const heading = document.createElement('h3');
+            heading.textContent = quiz.title || 'Quiz details';
+            const description = document.createElement('p');
+            description.textContent = quiz.description || 'No description provided.';
+            const link = document.createElement('a');
+            link.href = quiz.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = 'Start Quiz';
+            const openButton = document.createElement('button');
+            openButton.type = 'button';
+            openButton.textContent = 'Start';
+            openButton.onclick = () => window.open(quiz.link, '_blank');
+            panel.appendChild(heading);
+            panel.appendChild(description);
+            panel.appendChild(link);
+            panel.appendChild(document.createElement('br'));
+            panel.appendChild(openButton);
+            panel.style.display = 'block';
+        }
+
+        function selectWatchTab() {
+            document.getElementById('watchTabBtn').classList.add('active');
+            document.getElementById('quizTabBtn').classList.remove('active');
+            document.getElementById('watchPanel').style.display = 'block';
+            document.getElementById('quizPanel').style.display = 'none';
+        }
+
+        async function selectQuizTab() {
+            document.getElementById('quizTabBtn').classList.add('active');
+            document.getElementById('watchTabBtn').classList.remove('active');
+            document.getElementById('watchPanel').style.display = 'none';
+            document.getElementById('quizPanel').style.display = 'block';
+            await loadQuizzes();
         }
 
         function renderVideoCard(v) {
@@ -921,6 +1143,9 @@
         };
 
         async function initPage() {
+            document.getElementById('watchTabBtn').onclick = selectWatchTab;
+            document.getElementById('quizTabBtn').onclick = selectQuizTab;
+            selectWatchTab();
             await refreshStudentInfo();
             await loadVideos();
         }

@@ -371,7 +371,36 @@
         </div>
 
         <div class="card">
-            <h2>🔐 Change Student Password</h2>
+            <h2>� Add New Quiz</h2>
+            <div class="form-group"><label>Quiz Title</label><input type="text" id="newQuizTitle" placeholder="Enter quiz title"></div>
+            <div class="form-group"><label>Quiz Description</label><textarea id="newQuizDescription" rows="3" placeholder="Enter quiz description"></textarea></div>
+            <div class="form-group"><label>Quiz Link</label><input type="text" id="newQuizLink" placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
+            <div class="form-group"><label>Select Folder</label>
+                <select id="newQuizFolderSelect" multiple size="5"></select>
+                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to assign to one or more folders.</small>
+            </div>
+            <button id="createQuizBtn">Add Quiz</button>
+        </div>
+
+        <div class="card">
+            <h2>📚 Quiz Library</h2>
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Link</th>
+                            <th>Folders</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quizzesList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>�🔐 Change Student Password</h2>
             <div class="form-group"><label>Select Student</label>
                 <select id="passwordStudentSelect">
                     <option value="">Select a student</option>
@@ -596,6 +625,7 @@
                 await loadStudents();
                 await loadFolders();
                 await loadVideos();
+                await loadQuizzes();
             } catch (err) {
                 console.error('loadAll error', err);
             }
@@ -617,6 +647,10 @@
             if (editVideoFolderSelect) {
                 editVideoFolderSelect.innerHTML = '<option value="" disabled>Select folders for this video</option>';
             }
+            const newQuizFolderSelect = document.getElementById('newQuizFolderSelect');
+            if (newQuizFolderSelect) {
+                newQuizFolderSelect.innerHTML = '<option value="" disabled>None / Root</option>';
+            }
             data.folders.forEach(folder => {
                 const option = document.createElement('option');
                 option.value = folder._id;
@@ -628,6 +662,9 @@
                 }
                 if (editVideoFolderSelect) {
                     editVideoFolderSelect.appendChild(option.cloneNode(true));
+                }
+                if (newQuizFolderSelect) {
+                    newQuizFolderSelect.appendChild(option.cloneNode(true));
                 }
             });
             renderFolderTree(data.folders, folderTreeContainer);
@@ -727,6 +764,69 @@
                 actionsCell.appendChild(deleteBtn);
             });
         }
+
+        async function loadQuizzes() {
+            const table = document.getElementById('quizzesList');
+            table.innerHTML = '';
+            const r = await fetchAdmin('/api/admin/quizzes');
+            if (!r.ok) {
+                const tr = table.insertRow();
+                const cell = tr.insertCell(0);
+                cell.colSpan = 4;
+                cell.textContent = 'Unable to load quizzes';
+                cell.style.color = '#f87171';
+                return;
+            }
+            const quizzes = await r.json();
+            if (!Array.isArray(quizzes) || quizzes.length === 0) {
+                const tr = table.insertRow();
+                const cell = tr.insertCell(0);
+                cell.colSpan = 4;
+                cell.textContent = 'No quizzes have been added yet.';
+                cell.style.color = '#94a3b8';
+                return;
+            }
+            quizzes.forEach(q => {
+                const row = table.insertRow();
+                row.insertCell(0).textContent = q.title || 'Untitled';
+                const linkCell = row.insertCell(1);
+                const link = document.createElement('a');
+                link.href = q.link;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = q.link;
+                linkCell.appendChild(link);
+                row.insertCell(2).textContent = Array.isArray(q.folders) && q.folders.length > 0 ? q.folders.map(f => f.name).join(', ') : 'Root';
+                row.insertCell(3).textContent = new Date(q.createdAt).toLocaleDateString();
+            });
+        }
+
+        async function createQuiz() {
+            const title = document.getElementById('newQuizTitle').value.trim();
+            const description = document.getElementById('newQuizDescription').value.trim();
+            const link = document.getElementById('newQuizLink').value.trim();
+            const folderSelect = document.getElementById('newQuizFolderSelect');
+            const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : [];
+            if (!title) { showMessage('Quiz title cannot be empty', true); return; }
+            if (!link) { showMessage('Quiz link cannot be empty', true); return; }
+            const r = await fetchAdmin('/api/admin/quizzes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, link, folderIds })
+            });
+            const data = await r.json();
+            if (r.ok) {
+                showMessage('✅ Quiz added successfully', false);
+                document.getElementById('newQuizTitle').value = '';
+                document.getElementById('newQuizDescription').value = '';
+                document.getElementById('newQuizLink').value = '';
+                if (folderSelect) folderSelect.selectedIndex = -1;
+                await loadQuizzes();
+            } else {
+                showMessage(data.error || 'Error adding quiz', true);
+            }
+        }
+
         function editVideo(video) {
             const editCard = document.getElementById('editVideoCard');
             editCard.style.display = 'block';
@@ -845,6 +945,7 @@
         }
         document.getElementById('updateVideoBtn').onclick = async () => { const videoInput = document.getElementById('youtubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const data = { youtubeId: videoId, title: document.getElementById('videoTitle').value, description: document.getElementById('videoDesc').value }; const r = await fetchAdmin('/api/admin/video-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (r.ok) { document.getElementById('youtubeId').value = videoId; showMessage(`✅ Default video saved! ID: ${videoId}`, false); } else { const err = await r.json(); showMessage(err.error || 'Error updating video', true); } };
         document.getElementById('createVideoBtn').onclick = async () => { const videoInput = document.getElementById('newVideoYoutubeId').value; const videoId = extractYouTubeId(videoInput); if (!videoId) { showMessage('Enter YouTube ID or URL', true); return; } if (!isValidYouTubeId(videoId)) { showMessage('Invalid YouTube ID format (must be 11 characters: letters, numbers, dash, underscore)', true); return; } const folderSelect = document.getElementById('newVideoFolderSelect'); const folderIds = folderSelect ? Array.from(folderSelect.selectedOptions).map(o => o.value).filter(Boolean) : []; const materials = gatherMaterials('newVideoMaterialsContainer'); const data = { youtubeId: videoId, title: document.getElementById('newVideoTitle').value, description: document.getElementById('newVideoDesc').value, materials, folderIds }; if (materials.length > 0) { data.materialTitle = materials[0].title || ''; data.materialLink = materials[0].link || ''; } const r = await fetchAdmin('/api/admin/videos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await r.json(); if (r.ok) { showMessage('✅ Video added to library', false); document.getElementById('newVideoYoutubeId').value = ''; document.getElementById('newVideoTitle').value = ''; document.getElementById('newVideoDesc').value = ''; if (folderSelect) folderSelect.selectedIndex = -1; resetMaterials('newVideoMaterialsContainer'); loadVideos(); } else showMessage(result.error || 'Error adding video', true); };
+        document.getElementById('createQuizBtn').onclick = createQuiz;
         document.getElementById('createFolderBtn').onclick = async () => {
             const name = document.getElementById('newFolderName').value.trim();
             let parentFolderId = document.getElementById('parentFolderSelect').value;
