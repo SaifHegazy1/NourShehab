@@ -580,14 +580,14 @@
                 iframeBlocker.style.display = 'block';
                 frameWrapper.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff">Loading player…</div>';
                 const loadPlayer = () => {
-                    if (ytApiReady && window.YT && window.YT.Player && typeof window.YT.Player === 'function') {
+                    if (window.YT && window.YT.Player && typeof window.YT.Player === 'function') {
                         initYoutubePlayer(youtubeId, frameWrapper);
-                    } else if (!ytApiReady) {
-                        setTimeout(loadPlayer, 200);
+                    } else if (ytApiReady) {
+                        initYoutubePlayer(youtubeId, frameWrapper);
                     } else if (embedHtml) {
                         frameWrapper.innerHTML = embedHtml;
                     } else {
-                        frameWrapper.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff">Unable to load video</div>';
+                        setTimeout(loadPlayer, 200);
                     }
                 };
                 loadPlayer();
