@@ -27,7 +27,14 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use('/api/', limiter);
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/educational-portal')
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/educational-portal';
+if (!process.env.MONGODB_URI) {
+    console.warn('WARNING: MONGODB_URI is not set. Falling back to local MongoDB at mongodb://localhost:27017/educational-portal. Atlas will not be connected.');
+} else {
+    console.log('Using MongoDB URI from environment');
+}
+
+mongoose.connect(mongoUri)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB error:', err));
 

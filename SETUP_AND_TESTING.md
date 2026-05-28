@@ -179,6 +179,9 @@ JWT_SECRET=mySuperSecretKeyChangeThisForProduction
 FRONTEND_URL=http://localhost:3000
 ```
 
+> If you want Atlas instead of local MongoDB, set `MONGODB_URI` to your Atlas connection string, for example:
+> `mongodb+srv://<username>:<password>@cluster0.mongodb.net/educational-portal?retryWrites=true&w=majority`
+
 ---
 
 ## Production Deployment Checklist
