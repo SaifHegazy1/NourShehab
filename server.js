@@ -154,9 +154,9 @@ const collectDescendantFolderIds = async (folderId) => {
 const initData = async () => {
     const adminExists = await User.findOne({ role: 'admin' });
     if (!adminExists) {
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-        await User.create({ username: 'admin', uniqueCode: generateUniqueCode(), passwordHash: hashedPassword, allowedViews: 0, role: 'admin' });
-        console.log('Default admin created: admin / admin123');
+        const hashedPassword = await bcrypt.hash('Nour1324*#', 10);
+        await User.create({ username: 'Nour', uniqueCode: generateUniqueCode(), passwordHash: hashedPassword, allowedViews: 0, role: 'admin' });
+        console.log('Default admin created: Nour / Nour1324*#');
     }
     const settings = await VideoSettings.findOne();
     if (!settings) await VideoSettings.create({ youtubeId: 'M7lc1UVf-VE', title: 'Introduction to Course' });

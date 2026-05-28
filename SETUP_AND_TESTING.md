@@ -165,8 +165,8 @@ Solution:
 ---
 
 ## Default Admin Account
-- **Username:** `admin`
-- **Password:** `admin123`
+- **Username:** `Nour`
+- **Password:** `Nour1324*#`
 - **Action:** ⚠️ Change this in production!
 
 ---
