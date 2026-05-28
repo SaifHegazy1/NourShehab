@@ -468,16 +468,47 @@
         let idx = 0;
         watermarkInterval = setInterval(() => { idx = (idx+1)%4; watermark.className = `watermark ${corners[idx]}`; }, 30000);
 
+        function getFullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        }
+
+        function requestFullscreen(element) {
+            if (!element) return Promise.resolve();
+            if (element.requestFullscreen) return element.requestFullscreen();
+            if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+            if (element.mozRequestFullScreen) return element.mozRequestFullScreen();
+            if (element.msRequestFullscreen) return element.msRequestFullscreen();
+            const iframe = element.querySelector('iframe');
+            if (iframe && typeof iframe.webkitEnterFullscreen === 'function') {
+                iframe.webkitEnterFullscreen();
+                return Promise.resolve();
+            }
+            return Promise.reject(new Error('Fullscreen not supported'));
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) return document.exitFullscreen();
+            if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+            if (document.mozCancelFullScreen) return document.mozCancelFullScreen();
+            if (document.msExitFullscreen) return document.msExitFullscreen();
+            return Promise.reject(new Error('Exit fullscreen not supported'));
+        }
+
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                videoWrapper.requestFullscreen().catch(() => {});
+            if (!getFullscreenElement()) {
+                requestFullscreen(videoWrapper).catch(() => {
+                    const iframe = document.querySelector('#playerContainer iframe');
+                    if (iframe && typeof iframe.webkitEnterFullscreen === 'function') {
+                        iframe.webkitEnterFullscreen();
+                    }
+                });
             } else {
-                document.exitFullscreen().catch(() => {});
+                exitFullscreen().catch(() => {});
             }
         }
 
         document.addEventListener('fullscreenchange', () => {
-            fullscreenBtn.innerText = document.fullscreenElement === videoWrapper ? 'Exit Fullscreen' : 'Fullscreen';
+            fullscreenBtn.innerText = getFullscreenElement() === videoWrapper ? 'Exit Fullscreen' : 'Fullscreen';
         });
 
         // Anti-copy measures
