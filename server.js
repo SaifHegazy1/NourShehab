@@ -676,4 +676,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
     await initData();
     console.log(`Server running on port ${PORT}`);
+    console.log('Made By Saif Hegazy (Faculty of Computers and Data Science Alexandria University) | Portfolio: https://saifhegazy1.github.io/Portfolio/');
 });

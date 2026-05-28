@@ -171,10 +171,11 @@
         <a href="/" class="back-btn">← Back to Home</a>
     </div>
     <footer>
-        <p>© 2025 ENG NOUR SHEHAB • MATH CAPSULE — Precision learning for engineers</p>
+        <p>Made By Saif Hegazy (Faculty of Computers and Data Science Alexandria University) • <a href="https://saifhegazy1.github.io/Portfolio/" target="_blank" rel="noopener noreferrer">Portfolio</a></p>
     </footer>
     <script src="/api-base.js"></script>
     <script>
+        console.log('Made By Saif Hegazy (Faculty of Computers and Data Science Alexandria University) | Portfolio: https://saifhegazy1.github.io/Portfolio/');
         apiFetch('/api/tutor/profile')
             .then(res => res.json())
             .then(profile => {
