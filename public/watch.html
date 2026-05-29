@@ -47,8 +47,9 @@
         .youtube-blocker-edge.left{top:22%;left:0;width:22%;height:56%;}
         .youtube-blocker-edge.right{top:22%;right:0;width:22%;height:56%;}
         .player-frame{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
-        .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:20;}
-        .player-overlay button{background:#38bdf8;border:none;color:#0f172a;font-size:1rem;font-weight:700;padding:0.9rem 1.8rem;border-radius:999px;cursor:pointer;box-shadow:0 15px 30px rgba(56,189,248,0.25);transition:transform 0.2s ease,filter 0.2s ease;}
+        /* Ensure the overlay and its Play button sit above player controls on small screens (e.g. iPhone) */
+        .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:2000;pointer-events:auto}
+        .player-overlay button{background:#38bdf8;border:none;color:#0f172a;font-size:1rem;font-weight:700;padding:0.9rem 1.8rem;border-radius:999px;cursor:pointer;box-shadow:0 15px 30px rgba(56,189,248,0.25);transition:transform 0.2s ease,filter 0.2s ease;position:relative;z-index:2001}
         .player-overlay button:hover{transform:translateY(-2px);filter:brightness(1.05);}
         .video-wrapper .fullscreen-btn{position:absolute;top:16px;right:16px;z-index:30;}
         .video-wrapper .player-watermark{position:absolute;top:16px;left:16px;z-index:40;pointer-events:none;}
