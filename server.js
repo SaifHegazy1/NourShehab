@@ -359,7 +359,7 @@ app.get('/api/student/video-embed', authenticateJWT, requireStudent, async (req,
         return res.status(400).json({ error: 'No video configured' });
     }
     const origin = encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000');
-    const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
+    const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen webkitallowfullscreen mozallowfullscreen referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
     res.json({ html: embedHtml });
 });
 
@@ -392,7 +392,7 @@ app.post('/api/student/consume-view-for-video', authenticateJWT, requireStudent,
 
         const newToken = jwt.sign({ id: user._id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '24h' });
         const origin = encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000');
-        const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
+        const embedHtml = `<iframe src="https://www.youtube-nocookie.com/embed/${video.youtubeId}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0&autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen webkitallowfullscreen mozallowfullscreen referrerpolicy="origin" style="width:100%;height:100%"></iframe>`;
         res.json({
             success: true,
             remainingViews: user.allowedViews,
