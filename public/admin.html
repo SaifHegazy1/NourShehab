@@ -578,7 +578,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                const data = await res.json();
+
+                let data;
+                try {
+                    data = await res.json();
+                } catch (parseErr) {
+                    const text = await res.text();
+                    data = { error: text || 'Invalid JSON response from server' };
+                }
 
                 if (res.ok && data.token) {
                     localStorage.setItem('adminToken', data.token);
