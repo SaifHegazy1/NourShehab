@@ -967,6 +967,30 @@
                                 ifr.setAttribute('webkitallowfullscreen', '');
                                 ifr.setAttribute('mozallowfullscreen', '');
                             }
+                            // Ensure embed origin matches current page origin to avoid YouTube error 150/153
+                            if (ifr) {
+                                try {
+                                    let src = ifr.getAttribute('src') || '';
+                                    const me = encodeURIComponent(window.location.origin);
+                                    if (src.match(/([?&])origin=[^&]*/)) {
+                                        src = src.replace(/([?&])origin=[^&]*/, `$1origin=${me}`);
+                                    } else {
+                                        src += (src.includes('?') ? '&' : '?') + `origin=${me}`;
+                                    }
+                                    // remove playsinline=1 for iOS too
+                                    src = src.replace(/([?&])playsinline=1(&|$)/, '$1playsinline=0$2');
+                                    ifr.setAttribute('src', src);
+
+                                    // ensure allow attribute contains necessary permissions
+                                    let allow = (ifr.getAttribute('allow') || '').trim();
+                                    const needed = ['fullscreen','autoplay','encrypted-media','picture-in-picture'];
+                                    needed.forEach(n => { if (!new RegExp(n).test(allow)) allow = allow ? `${allow}; ${n}` : n; });
+                                    ifr.setAttribute('allow', allow);
+                                    ifr.setAttribute('allowfullscreen', '');
+                                    ifr.setAttribute('webkitallowfullscreen', '');
+                                    ifr.setAttribute('mozallowfullscreen', '');
+                                } catch (e) { console.warn('Failed to normalize iframe src/allow attributes', e); }
+                            }
                         } catch (e) { console.warn('Failed to adjust iframe for iOS fullscreen', e); }
                     } else {
                         setTimeout(loadPlayer, 200);
