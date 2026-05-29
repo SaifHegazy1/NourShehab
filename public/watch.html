@@ -1304,6 +1304,33 @@
         }
         initPage();
         window.addEventListener('beforeunload', () => { if(watermarkInterval) clearInterval(watermarkInterval); });
+
+        // Prevent any code on this page from opening external YouTube links.
+        (function(){
+            const YT_RE = /(?:youtube\.com\/watch|youtu\.be)/i;
+            const origOpen = window.open.bind(window);
+            window.open = function(url, target, features){
+                try{
+                    if(typeof url === 'string' && YT_RE.test(url)){
+                        console.warn('Blocked external YouTube open:', url);
+                        alert('Opening external YouTube links is disabled in this app.');
+                        return null;
+                    }
+                }catch(e){ }
+                return origOpen(url, target, features);
+            };
+            document.addEventListener('click', function(e){
+                try{
+                    const a = e.target.closest && e.target.closest('a');
+                    if(a && a.href && YT_RE.test(a.href)){
+                        e.preventDefault();
+                        console.warn('Blocked click to external YouTube URL:', a.href);
+                        alert('Opening external YouTube links is disabled in this app.');
+                        return false;
+                    }
+                }catch(err){ }
+            }, true);
+        })();
     </script>
 </body>
 </html>
