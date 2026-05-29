@@ -772,11 +772,17 @@ app.delete('/api/admin/video/:videoId', authenticateJWT, requireAdmin, async (re
 
 app.post('/api/admin/student/change-password', authenticateJWT, requireAdmin, async (req, res) => {
     try {
-        const { studentId, newPassword } = req.body;
-        if (!studentId || !newPassword || newPassword.length < 4) return res.status(400).json({ error: 'Student ID and password (min 4 chars) required' });
-        if (!mongoose.Types.ObjectId.isValid(studentId)) return res.status(400).json({ error: 'Invalid student ID' });
+        const { studentId, code, newPassword } = req.body;
+        if (!newPassword || newPassword.length < 4) return res.status(400).json({ error: 'Password (min 4 chars) required' });
 
-        const student = await User.findOne({ _id: studentId, role: 'student' });
+        let student = null;
+        if (studentId) {
+            if (!mongoose.Types.ObjectId.isValid(studentId)) return res.status(400).json({ error: 'Invalid student ID' });
+            student = await User.findOne({ _id: studentId, role: 'student' });
+        } else if (code) {
+            student = await User.findOne({ uniqueCode: code, role: 'student' });
+        }
+
         if (!student) return res.status(404).json({ error: 'Student not found' });
 
         student.passwordHash = await bcrypt.hash(newPassword, 10);
