@@ -913,6 +913,8 @@
             ytApiReady = true;
         }
 
+        const isIOS = /iP(hone|od|ad)/.test(navigator.platform) || (/MacIntel/.test(navigator.platform) && navigator.maxTouchPoints > 1) || /iPad|iPhone|iPod/.test(navigator.userAgent);
+
         function renderPlayerOverlay(embedHtml, youtubeId) {
             const container = document.getElementById('playerContainer');
             container.innerHTML = '';
@@ -949,6 +951,20 @@
                         initYoutubePlayer(youtubeId, frameWrapper);
                     } else if (embedHtml) {
                         frameWrapper.innerHTML = embedHtml;
+                        // If on iOS, ensure the iframe src does not force playsinline (so the native fullscreen button appears)
+                        try {
+                            const ifr = frameWrapper.querySelector('iframe');
+                            if (ifr && isIOS) {
+                                let src = ifr.getAttribute('src') || '';
+                                // remove playsinline=1 or set to 0
+                                src = src.replace(/([?&])playsinline=1(&|$)/, '$1playsinline=0$2');
+                                ifr.setAttribute('src', src);
+                                // ensure allowfullscreen attribute present
+                                ifr.setAttribute('allowfullscreen', '');
+                                ifr.setAttribute('webkitallowfullscreen', '');
+                                ifr.setAttribute('mozallowfullscreen', '');
+                            }
+                        } catch (e) { console.warn('Failed to adjust iframe for iOS fullscreen', e); }
                     } else {
                         setTimeout(loadPlayer, 200);
                     }
@@ -977,7 +993,7 @@
                     'rel': 0,
                     'modestbranding': 1,
                     'fs': 1,
-                    'playsinline': 1,
+                    'playsinline': isIOS ? 0 : 1,
                     'iv_load_policy': 3,
                     'showinfo': 0,
                     'cc_load_policy': 0,
