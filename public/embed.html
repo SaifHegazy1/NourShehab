@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Embed</title>
+  <style>html,body{height:100%;margin:0}#wrap{width:100%;height:100%;}</style>
+</head>
+<body>
+  <div id="wrap"></div>
+  <script>
+    (function(){
+      function qs(name){
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+      const v = qs('v');
+      const wrap = document.getElementById('wrap');
+      if (!v) {
+        wrap.innerHTML = '<div style="color:#fff;background:#000;height:100%;display:flex;align-items:center;justify-content:center">No video id provided</div>';
+        return;
+      }
+      const origin = encodeURIComponent(window.location.origin);
+      const src = `https://www.youtube-nocookie.com/embed/${v}?origin=${origin}&rel=0&modestbranding=1&controls=1&fs=1&disablekb=0&playsinline=1&iv_load_policy=3&showinfo=0&cc_load_policy=0`;
+      const ifr = document.createElement('iframe');
+      ifr.src = src;
+      ifr.width = '100%';
+      ifr.height = '100%';
+      ifr.frameBorder = '0';
+      ifr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+      ifr.setAttribute('allowfullscreen', '');
+      ifr.setAttribute('webkitallowfullscreen', '');
+      ifr.setAttribute('mozallowfullscreen', '');
+      ifr.style.display = 'block';
+      wrap.appendChild(ifr);
+    })();
+  </script>
+</body>
+</html>
