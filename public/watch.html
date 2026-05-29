@@ -441,6 +441,7 @@
         const token = localStorage.getItem('token');
         if(!token) window.location.href = '/student';
         let username = '', allocations = {}, viewConsumed = false, watermarkInterval = null;
+        let currentYoutubeId = '';
 
         function parseJWT(t){
             try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch(e){return null}
@@ -495,6 +496,13 @@
         }
 
         function toggleFullscreen() {
+            if (isIOS && currentYoutubeId) {
+                // iOS: open the native YouTube watch page to allow fullscreen
+                const watchUrl = `https://www.youtube.com/watch?v=${currentYoutubeId}`;
+                window.open(watchUrl, '_blank');
+                return;
+            }
+
             if (!getFullscreenElement()) {
                 requestFullscreen(videoWrapper).catch(() => {
                     const iframe = document.querySelector('#playerContainer iframe');
@@ -916,6 +924,7 @@
         const isIOS = /iP(hone|od|ad)/.test(navigator.platform) || (/MacIntel/.test(navigator.platform) && navigator.maxTouchPoints > 1) || /iPad|iPhone|iPod/.test(navigator.userAgent);
 
         function renderPlayerOverlay(embedHtml, youtubeId) {
+            currentYoutubeId = youtubeId || '';
             const container = document.getElementById('playerContainer');
             container.innerHTML = '';
             if (currentPlayer && typeof currentPlayer.destroy === 'function') {
