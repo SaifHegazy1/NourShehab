@@ -455,6 +455,10 @@
         <div class="card">
             <h2>➕ Assign Views to Selected Students/Videos</h2>
             <div class="form-group"><label>Select Students</label>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="checkbox" id="selectAllStudentsCheckbox">
+                    <label for="selectAllStudentsCheckbox" style="margin: 0; font-weight: 400; color: #cbd5e1;">Select All Students</label>
+                </div>
                 <select id="viewStudentSelect" multiple size="6"></select>
                 <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple students.</small>
             </div>
@@ -1091,6 +1095,23 @@
         document.getElementById('uploadExcelBtn').onclick = async () => { const file = document.getElementById('excelFile').files[0]; if (!file) return; const fd = new FormData(); fd.append('excelFile', file); const r = await fetchAdmin('/api/admin/upload-students', { method: 'POST', body: fd }); const data = await r.json(); showMessage(`Added ${data.added}, skipped ${data.skipped}`, !data.success); if (data.success) loadStudents(); };
         document.getElementById('changePasswordBtn').onclick = async () => { const code = document.getElementById('passwordStudentCode').value.trim(); const newPassword = document.getElementById('newStudentPassword').value; if (!code) { showMessage('Enter student unique code', true); return; } if (!newPassword || newPassword.length < 4) { showMessage('New password must be at least 4 characters', true); return; } const r = await fetchAdmin('/api/admin/student/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, newPassword }) }); const data = await r.json().catch(() => null); if (r.ok) { showMessage('✅ Student password reset successfully', false); document.getElementById('passwordStudentCode').value = ''; document.getElementById('newStudentPassword').value = ''; } else { showMessage(data?.error || 'Failed to reset password', true); } };
         document.getElementById('createStudentBtn').onclick = async () => { const username = document.getElementById('newStudentUsername').value.trim(); if (!username) { showMessage('Enter username', true); return; } const r = await fetchAdmin('/api/admin/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }); const data = await r.json(); if (r.ok) { showMessage(`Student created! Code: ${data.student.uniqueCode}`, false); document.getElementById('newStudentUsername').value = ''; loadStudents(); } else showMessage(data.error || 'Failed', true); };
+        // Handle select all students checkbox
+        const selectAllCheckbox = document.getElementById('selectAllStudentsCheckbox');
+        const viewStudentSelect = document.getElementById('viewStudentSelect');
+        
+        selectAllCheckbox.addEventListener('change', (e) => {
+            Array.from(viewStudentSelect.options).forEach(option => {
+                option.selected = e.target.checked;
+            });
+        });
+        
+        viewStudentSelect.addEventListener('change', () => {
+            const totalOptions = viewStudentSelect.options.length;
+            const selectedOptions = Array.from(viewStudentSelect.selectedOptions).length;
+            selectAllCheckbox.checked = totalOptions > 0 && totalOptions === selectedOptions;
+            selectAllCheckbox.indeterminate = totalOptions > 0 && selectedOptions > 0 && selectedOptions < totalOptions;
+        });
+
         document.getElementById('addViewsBtn').onclick = async () => {
             const studentSelect = document.getElementById('viewStudentSelect');
             const videoSelect = document.getElementById('videoSelect');
@@ -1103,7 +1124,7 @@
             try {
                 const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentIds, videoIds, viewsToAdd: views }) });
                 const data = await r.json();
-                if (r.ok) { showMessage(`Added ${views} view(s) to ${studentIds.length} student(s) and ${videoIds.length} video(s)`, false); loadStudents(); studentSelect.selectedIndex = -1; videoSelect.selectedIndex = -1; document.getElementById('viewsToAdd').value = ''; } else showMessage(data.error || 'Failed to add per-video views', true);
+                if (r.ok) { showMessage(`Added ${views} view(s) to ${studentIds.length} student(s) and ${videoIds.length} video(s)`, false); loadStudents(); selectAllCheckbox.checked = false; selectAllCheckbox.indeterminate = false; studentSelect.selectedIndex = -1; videoSelect.selectedIndex = -1; document.getElementById('viewsToAdd').value = ''; } else showMessage(data.error || 'Failed to add per-video views', true);
             } catch (err) {
                 showMessage('Network or server error while adding views', true);
                 console.error(err);
