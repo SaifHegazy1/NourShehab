@@ -459,13 +459,15 @@
                     <input type="checkbox" id="selectAllStudentsCheckbox">
                     <label for="selectAllStudentsCheckbox" style="margin: 0; font-weight: 400; color: #cbd5e1;">Select All Students</label>
                 </div>
+                <input type="text" id="studentSearchInput" placeholder="Search by student id, code, or username" style="margin-bottom:0.75rem; width:100%;">
                 <select id="viewStudentSelect" multiple size="6"></select>
-                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple students.</small>
+                <small style="color:#94a3b8">Search by username, unique code, or student id; hold Ctrl/Cmd or Shift to select multiple.</small>
             </div>
             <div class="form-group"><label>Views to Add</label><input type="number" id="viewsToAdd" min="1"></div>
             <div class="form-group"><label>Select Videos</label>
+                <input type="text" id="videoSearchInput" placeholder="Search by video title" style="margin-bottom:0.75rem; width:100%;">
                 <select id="videoSelect" multiple size="6"></select>
-                <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple videos.</small>
+                <small style="color:#94a3b8">Search by video title; hold Ctrl/Cmd or Shift to select multiple.</small>
             </div>
             <button id="addViewsBtn">Assign Views</button>
         </div>
@@ -770,6 +772,13 @@
                     assignSelect.appendChild(o);
                 });
             }
+            allVideos = videos;
+            const videoQuery = document.getElementById('videoSearchInput')?.value.trim();
+            if (videoQuery) {
+                searchVideos();
+            } else {
+                renderVideoSelect(allVideos);
+            }
             renderVideosLibrary(videos);
         }
         function renderVideosLibrary(videos) {
@@ -1043,7 +1052,60 @@
         }
         async function loadVideoSettings() { const r = await fetchAdmin('/api/admin/video-settings'); const d = await r.json(); if (d) { document.getElementById('youtubeId').value = d.youtubeId || ''; document.getElementById('videoTitle').value = d.title || ''; document.getElementById('videoDesc').value = d.description || ''; } }
         async function loadTutorProfile() { const r = await apiFetch('/api/tutor/profile'); const d = await r.json(); document.getElementById('tutorName').value = d.name || ''; document.getElementById('tutorAbout').value = d.about || ''; document.getElementById('tutorPhotoUrl').value = d.photoUrl || ''; }
-        async function loadStudents() { const r = await fetchAdmin('/api/admin/students'); const students = await r.json(); if (!Array.isArray(students)) { showMessage('Unable to load students.', true); return; } const tbody = document.getElementById('studentsList'); const studentSelect = document.getElementById('viewStudentSelect'); if (studentSelect) { studentSelect.innerHTML = ''; students.forEach(s => { const opt = document.createElement('option'); opt.value = s._id; opt.textContent = `${s.username} (${s.uniqueCode})`; studentSelect.appendChild(opt); }); } tbody.innerHTML = ''; students.forEach(s => { const totalViews = (s.perVideoViews || []).reduce((sum, p) => sum + (p.views || 0), 0); const row = tbody.insertRow(); row.insertCell(0).textContent = s.username; row.insertCell(1).textContent = s.uniqueCode; row.insertCell(2).textContent = `${(s.perVideoViews || []).length} videos, ${totalViews} views`; row.insertCell(3).textContent = s.passwordHash ? '✅ Yes' : '❌ No'; const cell = row.insertCell(4); const input = document.createElement('input'); input.type = 'number'; input.className = 'small-input'; input.placeholder = 'Add'; input.min = '1'; input.id = `views-${s._id}`; const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '+'; addBtn.addEventListener('click', () => addViews(s._id, input.id)); const deleteBtn = document.createElement('button'); deleteBtn.type = 'button'; deleteBtn.className = 'danger'; deleteBtn.textContent = 'Del'; deleteBtn.addEventListener('click', () => deleteStudent(s.username)); cell.appendChild(input); cell.appendChild(addBtn); cell.appendChild(deleteBtn); }); }
+        let allStudents = [];
+        let allVideos = [];
+
+        function renderStudentSelect(students) {
+            const studentSelect = document.getElementById('viewStudentSelect');
+            if (!studentSelect) return;
+            studentSelect.innerHTML = '';
+            students.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s._id;
+                opt.textContent = `${s.username} (${s.uniqueCode})`;
+                studentSelect.appendChild(opt);
+            });
+        }
+
+        function renderVideoSelect(videos) {
+            const sel = document.getElementById('videoSelect');
+            if (!sel) return;
+            sel.innerHTML = '';
+            videos.forEach(v => {
+                const o = document.createElement('option');
+                o.value = v._id;
+                o.textContent = `${v.title} (${v.viewCount || 0} views)`;
+                sel.appendChild(o);
+            });
+        }
+
+        function searchStudents() {
+            const query = (document.getElementById('studentSearchInput')?.value || '').trim().toLowerCase();
+            if (!query) {
+                renderStudentSelect(allStudents);
+                return;
+            }
+            const filtered = allStudents.filter(s => {
+                const searchable = `${s.username || ''} ${s.uniqueCode || ''} ${s._id || ''}`.toLowerCase();
+                return searchable.includes(query);
+            });
+            renderStudentSelect(filtered);
+        }
+
+        function searchVideos() {
+            const query = (document.getElementById('videoSearchInput')?.value || '').trim().toLowerCase();
+            if (!query) {
+                renderVideoSelect(allVideos);
+                return;
+            }
+            const filtered = allVideos.filter(v => {
+                const searchable = `${v.title || ''} ${v.youtubeId || ''}`.toLowerCase();
+                return searchable.includes(query);
+            });
+            renderVideoSelect(filtered);
+        }
+
+        async function loadStudents() { const r = await fetchAdmin('/api/admin/students'); const students = await r.json(); if (!Array.isArray(students)) { showMessage('Unable to load students.', true); return; } allStudents = students; const tbody = document.getElementById('studentsList'); renderStudentSelect(allStudents); const studentQuery = document.getElementById('studentSearchInput')?.value.trim(); if (studentQuery) searchStudents(); tbody.innerHTML = ''; students.forEach(s => { const totalViews = (s.perVideoViews || []).reduce((sum, p) => sum + (p.views || 0), 0); const row = tbody.insertRow(); row.insertCell(0).textContent = s.username; row.insertCell(1).textContent = s.uniqueCode; row.insertCell(2).textContent = `${(s.perVideoViews || []).length} videos, ${totalViews} views`; row.insertCell(3).textContent = s.passwordHash ? '✅ Yes' : '❌ No'; const cell = row.insertCell(4); const input = document.createElement('input'); input.type = 'number'; input.className = 'small-input'; input.placeholder = 'Add'; input.min = '1'; input.id = `views-${s._id}`; const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '+'; addBtn.addEventListener('click', () => addViews(s._id, input.id)); const deleteBtn = document.createElement('button'); deleteBtn.type = 'button'; deleteBtn.className = 'danger'; deleteBtn.textContent = 'Del'; deleteBtn.addEventListener('click', () => deleteStudent(s.username)); cell.appendChild(input); cell.appendChild(addBtn); cell.appendChild(deleteBtn); }); }
         window.addViews = async (studentId, inputId) => { const inp = document.getElementById(inputId); if (!inp) { showMessage('Unable to locate student view input', true); return; } const val = parseInt(inp.value, 10); if (Number.isNaN(val) || val < 1) { showMessage('Enter a valid number of views to add', true); return; } try { const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId, videoId: document.getElementById('videoSelect').value, viewsToAdd: val }) }); const data = await r.json(); if (r.ok) { showMessage('Per-video views added', false); loadStudents(); } else showMessage(data.error || 'Failed to add per-video views', true); } catch (err) { showMessage('Network error while adding views', true); console.error(err); } };
         window.deleteStudent = async (username) => { if (!confirm(`Delete ${username}?`)) return; const r = await fetchAdmin(`/api/admin/student/${username}`, { method: 'DELETE' }); if (r.ok) { showMessage('Student deleted', false); loadStudents(); } else { const data = await r.json(); showMessage(data.error || 'Failed to delete student', true); } };
         async function deleteVideo(videoId) {
@@ -1095,6 +1157,8 @@
         document.getElementById('uploadExcelBtn').onclick = async () => { const file = document.getElementById('excelFile').files[0]; if (!file) return; const fd = new FormData(); fd.append('excelFile', file); const r = await fetchAdmin('/api/admin/upload-students', { method: 'POST', body: fd }); const data = await r.json(); showMessage(`Added ${data.added}, skipped ${data.skipped}`, !data.success); if (data.success) loadStudents(); };
         document.getElementById('changePasswordBtn').onclick = async () => { const code = document.getElementById('passwordStudentCode').value.trim(); const newPassword = document.getElementById('newStudentPassword').value; if (!code) { showMessage('Enter student unique code', true); return; } if (!newPassword || newPassword.length < 4) { showMessage('New password must be at least 4 characters', true); return; } const r = await fetchAdmin('/api/admin/student/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, newPassword }) }); const data = await r.json().catch(() => null); if (r.ok) { showMessage('✅ Student password reset successfully', false); document.getElementById('passwordStudentCode').value = ''; document.getElementById('newStudentPassword').value = ''; } else { showMessage(data?.error || 'Failed to reset password', true); } };
         document.getElementById('createStudentBtn').onclick = async () => { const username = document.getElementById('newStudentUsername').value.trim(); if (!username) { showMessage('Enter username', true); return; } const r = await fetchAdmin('/api/admin/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }); const data = await r.json(); if (r.ok) { showMessage(`Student created! Code: ${data.student.uniqueCode}`, false); document.getElementById('newStudentUsername').value = ''; loadStudents(); } else showMessage(data.error || 'Failed', true); };
+        document.getElementById('studentSearchInput')?.addEventListener('input', searchStudents);
+        document.getElementById('videoSearchInput')?.addEventListener('input', searchVideos);
         // Handle select all students checkbox
         const selectAllCheckbox = document.getElementById('selectAllStudentsCheckbox');
         const viewStudentSelect = document.getElementById('viewStudentSelect');
