@@ -156,6 +156,12 @@
             color: #ffffff;
         }
 
+        .admin-nav a.active {
+            background: #38bdf8;
+            color: #0f172a;
+            border-color: #38bdf8;
+        }
+
         .subtitle {
             color: #94a3b8;
             margin-top: 0.25rem;
@@ -163,7 +169,12 @@
         }
 
         .section {
+            display: none;
             margin-bottom: 1.5rem;
+        }
+
+        .section.active {
+            display: block;
         }
 
         .section-heading {
@@ -376,7 +387,7 @@
 
         <div id="messageArea"></div>
 
-        <section id="settings" class="section">
+        <section id="settings" class="section active">
             <h2 class="section-heading">Quick Settings</h2>
             <div class="card-grid">
                 <div class="card">
@@ -708,7 +719,8 @@
                     adminToken = data.token;
                     loginModal.classList.remove('active');
                     adminContainer.style.display = 'block';
-                    loadAll();
+                    await loadAll();
+                    switchTab(window.location.hash ? window.location.hash.substring(1) : 'settings');
                 } else {
                     alert('Login failed: ' + (data.error || 'Invalid credentials'));
                     document.getElementById('adminPassword').value = '';
@@ -729,11 +741,31 @@
         if (adminToken) {
             loginModal.classList.remove('active');
             adminContainer.style.display = 'block';
-            loadAll();
+            loadAll().then(() => switchTab(window.location.hash ? window.location.hash.substring(1) : 'settings'));
         }
 
         document.getElementById('addNewVideoMaterialBtn').onclick = () => resetMaterials('newVideoMaterialsContainer', [...gatherMaterials('newVideoMaterialsContainer'), { title: '', link: '' }]);
         document.getElementById('addEditVideoMaterialBtn').onclick = () => resetMaterials('editVideoMaterialsContainer', [...gatherMaterials('editVideoMaterialsContainer'), { title: '', link: '' }]);
+
+        function switchTab(tabId) {
+            const target = document.getElementById(tabId);
+            if (!target) return;
+            document.querySelectorAll('.section').forEach(section => section.classList.toggle('active', section.id === tabId));
+            document.querySelectorAll('.admin-nav a').forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${tabId}`));
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.replaceState(null, '', `#${tabId}`);
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.admin-nav a').forEach(link => {
+                link.addEventListener('click', event => {
+                    event.preventDefault();
+                    switchTab(link.getAttribute('href').substring(1));
+                });
+            });
+        }
+
+        setupTabs();
 
         function logoutAdmin() {
             localStorage.removeItem('adminToken');
@@ -1003,6 +1035,7 @@
         }
 
         function editQuiz(quiz) {
+            switchTab('quiz-management');
             const editCard = document.getElementById('editQuizCard');
             editCard.style.display = 'block';
             document.getElementById('editQuizId').value = quiz._id;
@@ -1016,6 +1049,7 @@
                     opt.selected = selectedIds.includes(opt.value);
                 });
             }
+            setTimeout(() => editCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
         }
 
         function cancelEditQuiz() {
@@ -1067,6 +1101,7 @@
         }
 
         function editVideo(video) {
+            switchTab('library-management');
             const editCard = document.getElementById('editVideoCard');
             editCard.style.display = 'block';
             document.getElementById('editVideoId').value = video._id;
@@ -1083,6 +1118,7 @@
             }
             document.getElementById('saveEditedVideoBtn').onclick = saveEditedVideo;
             document.getElementById('cancelEditVideoBtn').onclick = cancelEditVideo;
+            setTimeout(() => editCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
         }
 
         function cancelEditVideo() {
