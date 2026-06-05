@@ -1245,6 +1245,10 @@
             }
             // Pass youtubeId to renderPlayerOverlay
             renderPlayerOverlay(data.embedHtml, data.video?.youtubeId || '');
+            const playerWrapper = document.getElementById('playerWrapper');
+            if (playerWrapper) {
+                playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         const changePwdBtn = document.getElementById('changePwdBtn');
@@ -1298,9 +1302,13 @@
         async function initPage() {
             document.getElementById('watchTabBtn').onclick = selectWatchTab;
             document.getElementById('quizTabBtn').onclick = selectQuizTab;
-            selectWatchTab();
             await refreshStudentInfo();
-            await loadVideos();
+            const requestedTab = new URLSearchParams(window.location.search).get('tab') || (window.location.hash === '#quiz' ? 'quiz' : 'watch');
+            if (requestedTab === 'quiz') {
+                await selectQuizTab();
+            } else {
+                await selectWatchTab();
+            }
         }
         initPage();
         window.addEventListener('beforeunload', () => { if(watermarkInterval) clearInterval(watermarkInterval); });
