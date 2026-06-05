@@ -349,6 +349,151 @@
             background: #450a0a;
             color: #f87171
         }
+
+        .link-button {
+            background: transparent;
+            border: none;
+            color: #38bdf8;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+            font: inherit;
+        }
+
+        .student-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.75);
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .student-modal.active {
+            display: flex;
+        }
+
+        .student-modal-content {
+            width: 100%;
+            max-width: 880px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 28px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .student-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #111827;
+        }
+
+        .student-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #38bdf8;
+        }
+
+        .student-modal-header .close-btn {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 999px;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .student-modal-body {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .student-info-card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 1rem;
+        }
+
+        .student-info-card h3 {
+            margin: 0 0 0.75rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .student-info-card p {
+            margin: 0.25rem 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .student-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .student-modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .student-modal-table th,
+        .student-modal-table td {
+            padding: 0.9rem 0.8rem;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0;
+            text-align: left;
+        }
+
+        .student-modal-table th {
+            background: #0f172a;
+            color: #38bdf8;
+        }
+
+        .student-modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .student-modal-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .student-modal-info span {
+            color: #94a3b8;
+            font-size: 0.92rem;
+        }
+
+        .student-modal .form-group input {
+            width: 100%;
+        }
     </style>
     <script src="/api-base.js"></script>
 </head>
@@ -599,6 +744,7 @@
 
             <div class="card">
                 <h2>👥 Students List</h2>
+                <div class="form-group"><label>Search Student List</label><input type="text" id="studentTableSearchInput" placeholder="Search by username or code"></div>
                 <div style="overflow-x:auto">
                     <table>
                         <thead>
@@ -612,6 +758,60 @@
                         </thead>
                         <tbody id="studentsList"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <div class="student-modal" id="studentModal">
+                <div class="student-modal-content" role="dialog" aria-modal="true" aria-labelledby="studentModalTitle">
+                    <div class="student-modal-header">
+                        <div>
+                            <h2 id="studentModalTitle">Student Details</h2>
+                            <div id="studentModalSubtitle" class="student-modal-info"></div>
+                        </div>
+                        <button type="button" class="close-btn" id="studentModalCloseBtn" aria-label="Close student details">×</button>
+                    </div>
+                    <div class="student-modal-body">
+                        <div class="student-info-grid">
+                            <div class="student-info-card">
+                                <h3>Name</h3>
+                                <p id="modalStudentName"></p>
+                            </div>
+                            <div class="student-info-card">
+                                <h3>Unique Code</h3>
+                                <p id="modalStudentCode"></p>
+                            </div>
+                            <div class="student-info-card">
+                                <h3>Password Status</h3>
+                                <p id="modalStudentPasswordStatus"></p>
+                            </div>
+                            <div class="student-info-card">
+                                <h3>Assigned Videos</h3>
+                                <p id="modalStudentVideosCount"></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Change Password</label>
+                            <input type="password" id="studentModalNewPassword" placeholder="Enter new password (min 4 chars)">
+                            <button id="studentModalChangePasswordBtn">Change Password</button>
+                            <div id="studentModalPasswordMessage" class="message" style="display:none"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Search Lesson</label>
+                            <input type="text" id="studentModalVideoSearchInput" placeholder="Search lessons by title">
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="student-modal-table">
+                                <thead>
+                                    <tr>
+                                        <th>Lesson Title</th>
+                                        <th>Allocated Views</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentModalVideosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -797,9 +997,9 @@
                 resetMaterials('editVideoMaterialsContainer');
                 await loadVideoSettings();
                 await loadTutorProfile();
-                await loadStudents();
                 await loadFolders();
                 await loadVideos();
+                await loadStudents();
                 await loadQuizzes();
             } catch (err) {
                 console.error('loadAll error', err);
@@ -1205,6 +1405,7 @@
         async function loadTutorProfile() { const r = await apiFetch('/api/tutor/profile'); const d = await r.json(); document.getElementById('tutorName').value = d.name || ''; document.getElementById('tutorAbout').value = d.about || ''; document.getElementById('tutorPhotoUrl').value = d.photoUrl || ''; }
         let allStudents = [];
         let allVideos = [];
+        let selectedStudent = null;
 
         function renderStudentSelect(students) {
             const studentSelect = document.getElementById('viewStudentSelect');
@@ -1228,6 +1429,128 @@
                 o.textContent = `${v.title} (${v.viewCount || 0} views)`;
                 sel.appendChild(o);
             });
+        }
+
+        function getVideoById(videoId) {
+            return allVideos.find(v => v._id === videoId || (typeof v._id === 'object' && v._id.toString() === videoId));
+        }
+
+        async function adjustStudentVideoViews(studentId, videoId, delta) {
+            if (!studentId || !videoId || delta === 0) return;
+            const r = await fetchAdmin('/api/admin/adjust-views-for-student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId, videoId, delta })
+            });
+            const data = await r.json();
+            if (!r.ok) {
+                showMessage(data.error || 'Unable to update student views', true);
+                return;
+            }
+            const updatedStudent = data.student;
+            const index = allStudents.findIndex(s => s._id === updatedStudent._id || (typeof s._id === 'object' && s._id.toString() === updatedStudent._id.toString()));
+            if (index !== -1) {
+                allStudents[index] = updatedStudent;
+            }
+            filterStudentsTable();
+            if (selectedStudent && (selectedStudent._id === updatedStudent._id || (typeof selectedStudent._id === 'object' && selectedStudent._id.toString() === updatedStudent._id.toString()))) {
+                selectedStudent = updatedStudent;
+                renderStudentModal(selectedStudent);
+            }
+            showMessage('Student views updated', false);
+        }
+
+        function openStudentModal(student) {
+            if (!student) return;
+            selectedStudent = student;
+            document.getElementById('studentModal').classList.add('active');
+            renderStudentModal(student);
+        }
+
+        function closeStudentModal() {
+            selectedStudent = null;
+            document.getElementById('studentModal').classList.remove('active');
+            document.getElementById('studentModalVideosBody').innerHTML = '';
+            document.getElementById('studentModalPasswordMessage').style.display = 'none';
+        }
+
+        function renderStudentModal(student) {
+            const nameEl = document.getElementById('modalStudentName');
+            const codeEl = document.getElementById('modalStudentCode');
+            const statusEl = document.getElementById('modalStudentPasswordStatus');
+            const countEl = document.getElementById('modalStudentVideosCount');
+            const subtitle = document.getElementById('studentModalSubtitle');
+            nameEl.textContent = student.username || 'Unknown';
+            codeEl.textContent = student.uniqueCode || 'N/A';
+            statusEl.textContent = student.passwordHash ? 'Set' : 'Not set';
+            countEl.textContent = `${(student.perVideoViews || []).length} assigned lesson(s)`;
+            subtitle.innerHTML = `<span>Student ID: ${student._id}</span><span>Remaining assigned videos: ${(student.perVideoViews || []).length}</span>`;
+            renderStudentModalVideos(student);
+        }
+
+        function renderStudentModalVideos(student) {
+            const tbody = document.getElementById('studentModalVideosBody');
+            const query = (document.getElementById('studentModalVideoSearchInput')?.value || '').trim().toLowerCase();
+            tbody.innerHTML = '';
+            const studentVideos = allVideos.map(video => {
+                const assignment = (student.perVideoViews || []).find(p => p.video && (p.video.toString ? p.video.toString() : p.video) === (video._id.toString ? video._id.toString() : video._id));
+                return { video, assigned: assignment ? assignment.views || 0 : 0 };
+            }).filter(item => {
+                if (!query) return true;
+                return `${item.video.title || ''}`.toLowerCase().includes(query);
+            });
+            studentVideos.forEach(item => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = item.video.title || 'Untitled';
+                row.insertCell(1).textContent = `${item.assigned} view${item.assigned === 1 ? '' : 's'}`;
+                const actionCell = row.insertCell(2);
+                const actionGroup = document.createElement('div');
+                actionGroup.className = 'student-modal-actions';
+
+                const addOne = document.createElement('button');
+                addOne.type = 'button';
+                addOne.textContent = '+1';
+                addOne.addEventListener('click', () => adjustStudentVideoViews(student._id, item.video._id, 1));
+
+                const removeOne = document.createElement('button');
+                removeOne.type = 'button';
+                removeOne.className = 'danger';
+                removeOne.textContent = '-1';
+                removeOne.disabled = item.assigned <= 0;
+                removeOne.addEventListener('click', () => adjustStudentVideoViews(student._id, item.video._id, -1));
+
+                actionGroup.appendChild(addOne);
+                actionGroup.appendChild(removeOne);
+                actionCell.appendChild(actionGroup);
+            });
+        }
+
+        async function changeSelectedStudentPassword() {
+            if (!selectedStudent) return;
+            const newPassword = document.getElementById('studentModalNewPassword').value.trim();
+            const messageEl = document.getElementById('studentModalPasswordMessage');
+            if (!newPassword || newPassword.length < 4) {
+                messageEl.textContent = 'New password must be at least 4 characters';
+                messageEl.className = 'message error';
+                messageEl.style.display = 'block';
+                return;
+            }
+            const r = await fetchAdmin('/api/admin/student/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ studentId: selectedStudent._id, newPassword })
+            });
+            const data = await r.json();
+            if (r.ok) {
+                messageEl.textContent = 'Password changed successfully';
+                messageEl.className = 'message success';
+                messageEl.style.display = 'block';
+                document.getElementById('studentModalNewPassword').value = '';
+            } else {
+                messageEl.textContent = data.error || 'Failed to change password';
+                messageEl.className = 'message error';
+                messageEl.style.display = 'block';
+            }
         }
 
         function searchStudents() {
@@ -1256,8 +1579,96 @@
             renderVideoSelect(filtered);
         }
 
-        async function loadStudents() { const r = await fetchAdmin('/api/admin/students'); const students = await r.json(); if (!Array.isArray(students)) { showMessage('Unable to load students.', true); return; } allStudents = students; const tbody = document.getElementById('studentsList'); renderStudentSelect(allStudents); const studentQuery = document.getElementById('studentSearchInput')?.value.trim(); if (studentQuery) searchStudents(); tbody.innerHTML = ''; students.forEach(s => { const totalViews = (s.perVideoViews || []).reduce((sum, p) => sum + (p.views || 0), 0); const row = tbody.insertRow(); row.insertCell(0).textContent = s.username; row.insertCell(1).textContent = s.uniqueCode; row.insertCell(2).textContent = `${(s.perVideoViews || []).length} videos, ${totalViews} views`; row.insertCell(3).textContent = s.passwordHash ? '✅ Yes' : '❌ No'; const cell = row.insertCell(4); const input = document.createElement('input'); input.type = 'number'; input.className = 'small-input'; input.placeholder = 'Add'; input.min = '1'; input.id = `views-${s._id}`; const addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.textContent = '+'; addBtn.addEventListener('click', () => addViews(s._id, input.id)); const deleteBtn = document.createElement('button'); deleteBtn.type = 'button'; deleteBtn.className = 'danger'; deleteBtn.textContent = 'Del'; deleteBtn.addEventListener('click', () => deleteStudent(s.username)); cell.appendChild(input); cell.appendChild(addBtn); cell.appendChild(deleteBtn); }); }
-        window.addViews = async (studentId, inputId) => { const inp = document.getElementById(inputId); if (!inp) { showMessage('Unable to locate student view input', true); return; } const val = parseInt(inp.value, 10); if (Number.isNaN(val) || val < 1) { showMessage('Enter a valid number of views to add', true); return; } try { const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studentId, videoId: document.getElementById('videoSelect').value, viewsToAdd: val }) }); const data = await r.json(); if (r.ok) { showMessage('Per-video views added', false); loadStudents(); } else showMessage(data.error || 'Failed to add per-video views', true); } catch (err) { showMessage('Network error while adding views', true); console.error(err); } };
+        async function loadStudents() {
+            const r = await fetchAdmin('/api/admin/students');
+            const students = await r.json();
+            if (!Array.isArray(students)) { showMessage('Unable to load students.', true); return; }
+            allStudents = students;
+            renderStudentSelect(allStudents);
+            const studentQuery = document.getElementById('studentSearchInput')?.value.trim();
+            if (studentQuery) searchStudents();
+            filterStudentsTable();
+        }
+
+        function renderStudentTable(students) {
+            const tbody = document.getElementById('studentsList');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                const totalViews = (s.perVideoViews || []).reduce((sum, p) => sum + (p.views || 0), 0);
+                const row = tbody.insertRow();
+
+                const nameCell = row.insertCell(0);
+                const nameButton = document.createElement('button');
+                nameButton.type = 'button';
+                nameButton.className = 'link-button';
+                nameButton.textContent = s.username || 'Unknown';
+                nameButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    openStudentModal(s);
+                });
+                nameCell.appendChild(nameButton);
+
+                row.insertCell(1).textContent = s.uniqueCode || '';
+                row.insertCell(2).textContent = `${(s.perVideoViews || []).length} videos, ${totalViews} views`;
+                row.insertCell(3).textContent = s.passwordHash ? '✅ Yes' : '❌ No';
+                const actionCell = row.insertCell(4);
+                const actions = document.createElement('div');
+                actions.className = 'student-actions';
+
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.textContent = '+';
+                addBtn.addEventListener('click', () => addViews(s._id, `views-${s._id}`));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'danger';
+                deleteBtn.textContent = 'Del';
+                deleteBtn.addEventListener('click', () => deleteStudent(s.username));
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'small-input';
+                input.placeholder = 'Add';
+                input.min = '1';
+                input.id = `views-${s._id}`;
+
+                actions.appendChild(input);
+                actions.appendChild(addBtn);
+                actions.appendChild(deleteBtn);
+                actionCell.appendChild(actions);
+            });
+        }
+
+        function filterStudentsTable() {
+            const query = (document.getElementById('studentTableSearchInput')?.value || '').trim().toLowerCase();
+            const filtered = query ? allStudents.filter(s => {
+                const searchable = `${s.username || ''} ${s.uniqueCode || ''}`.toLowerCase();
+                return searchable.includes(query);
+            }) : allStudents;
+            renderStudentTable(filtered);
+        }
+
+        window.addViews = async (studentId, inputId) => {
+            const inp = document.getElementById(inputId);
+            if (!inp) { showMessage('Unable to locate student view input', true); return; }
+            const val = parseInt(inp.value, 10);
+            if (Number.isNaN(val) || val < 1) { showMessage('Enter a valid number of views to add', true); return; }
+            try {
+                const r = await fetchAdmin('/api/admin/add-views-to-student-for-video', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, videoId: document.getElementById('videoSelect').value, viewsToAdd: val })
+                });
+                const data = await r.json();
+                if (r.ok) {
+                    showMessage('Per-video views added', false);
+                    await loadStudents();
+                } else showMessage(data.error || 'Failed to add per-video views', true);
+            } catch (err) {
+                showMessage('Network error while adding views', true);
+                console.error(err);
+            }
+        };
         window.deleteStudent = async (username) => { if (!confirm(`Delete ${username}?`)) return; const r = await fetchAdmin(`/api/admin/student/${username}`, { method: 'DELETE' }); if (r.ok) { showMessage('Student deleted', false); loadStudents(); } else { const data = await r.json(); showMessage(data.error || 'Failed to delete student', true); } };
         async function deleteVideo(videoId) {
             if (!confirm('Delete this video from the library?')) return;
@@ -1309,7 +1720,16 @@
         document.getElementById('changePasswordBtn').onclick = async () => { const code = document.getElementById('passwordStudentCode').value.trim(); const newPassword = document.getElementById('newStudentPassword').value; if (!code) { showMessage('Enter student unique code', true); return; } if (!newPassword || newPassword.length < 4) { showMessage('New password must be at least 4 characters', true); return; } const r = await fetchAdmin('/api/admin/student/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, newPassword }) }); const data = await r.json().catch(() => null); if (r.ok) { showMessage('✅ Student password reset successfully', false); document.getElementById('passwordStudentCode').value = ''; document.getElementById('newStudentPassword').value = ''; } else { showMessage(data?.error || 'Failed to reset password', true); } };
         document.getElementById('createStudentBtn').onclick = async () => { const username = document.getElementById('newStudentUsername').value.trim(); if (!username) { showMessage('Enter username', true); return; } const r = await fetchAdmin('/api/admin/create-student', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) }); const data = await r.json(); if (r.ok) { showMessage(`Student created! Code: ${data.student.uniqueCode}`, false); document.getElementById('newStudentUsername').value = ''; loadStudents(); } else showMessage(data.error || 'Failed', true); };
         document.getElementById('studentSearchInput')?.addEventListener('input', searchStudents);
+        document.getElementById('studentTableSearchInput')?.addEventListener('input', filterStudentsTable);
         document.getElementById('videoSearchInput')?.addEventListener('input', searchVideos);
+        document.getElementById('studentModalVideoSearchInput')?.addEventListener('input', () => {
+            if (selectedStudent) renderStudentModalVideos(selectedStudent);
+        });
+        document.getElementById('studentModalCloseBtn')?.addEventListener('click', closeStudentModal);
+        document.getElementById('studentModal')?.addEventListener('click', (event) => {
+            if (event.target.id === 'studentModal') closeStudentModal();
+        });
+        document.getElementById('studentModalChangePasswordBtn')?.addEventListener('click', changeSelectedStudentPassword);
         // Handle select all students checkbox
         const selectAllCheckbox = document.getElementById('selectAllStudentsCheckbox');
         const viewStudentSelect = document.getElementById('viewStudentSelect');

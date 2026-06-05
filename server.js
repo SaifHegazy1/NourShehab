@@ -641,6 +641,41 @@ app.post('/api/admin/add-views-to-student-for-video', authenticateJWT, requireAd
     } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
 });
 
+app.post('/api/admin/adjust-views-for-student', authenticateJWT, requireAdmin, async (req, res) => {
+    try {
+        const { studentId, videoId, delta } = req.body;
+        const parsedDelta = parseInt(delta, 10);
+        if (!mongoose.Types.ObjectId.isValid(studentId)) return res.status(400).json({ error: 'Invalid studentId' });
+        if (!mongoose.Types.ObjectId.isValid(videoId)) return res.status(400).json({ error: 'Invalid videoId' });
+        if (Number.isNaN(parsedDelta) || parsedDelta === 0) return res.status(400).json({ error: 'delta must be a non-zero number' });
+
+        const student = await User.findOne({ _id: studentId, role: 'student' });
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+
+        const video = await Video.findById(videoId);
+        if (!video) return res.status(404).json({ error: 'Video not found' });
+
+        const existing = student.perVideoViews.find(p => p.video && p.video.toString() === videoId.toString());
+        if (existing) {
+            existing.views = Math.max(0, (existing.views || 0) + parsedDelta);
+            if (existing.views === 0) {
+                student.perVideoViews = student.perVideoViews.filter(p => p.video && p.video.toString() !== videoId.toString());
+            }
+        } else if (parsedDelta > 0) {
+            student.perVideoViews.push({ video: video._id, views: parsedDelta });
+        } else {
+            return res.status(400).json({ error: 'Cannot decrease views below zero' });
+        }
+
+        await student.save();
+        const updatedStudent = await User.findById(student._id).select('-passwordHash').lean();
+        res.json({ success: true, student: updatedStudent });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.post('/api/admin/create-student', authenticateJWT, requireAdmin, async (req, res) => {
     const { username } = req.body;
     if (!username || username.trim() === '') return res.status(400).json({ error: 'Username required' });
