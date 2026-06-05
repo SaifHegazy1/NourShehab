@@ -6,8 +6,498 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Admin | ENG NOUR SHEHAB MATH CAPSULE</title>
-    <link rel="stylesheet" href="/theme.css">
-    <script src="/theme.js" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: #0f172a;
+            font-family: system-ui, sans-serif;
+            padding: 20px
+        }
+
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center
+        }
+
+        .login-modal.active {
+            display: flex
+        }
+
+        .login-card {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #334155
+        }
+
+        .login-card h2 {
+            color: #38bdf8;
+            margin-bottom: 1rem;
+            text-align: center
+        }
+
+        .login-card .form-group {
+            margin-bottom: 1.5rem
+        }
+
+        .login-card label {
+            color: #cbd5e1;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 0.5rem
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: white
+        }
+
+        .login-card input:focus {
+            border-color: #38bdf8;
+            outline: none
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #0ea5e9;
+            color: white;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        .login-btn:hover {
+            background: #0284c7
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto
+        }
+
+        .header {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 1rem 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #334155;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.4rem;
+            border-radius: 40px;
+            cursor: pointer
+        }
+
+        .admin-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem;
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 28px;
+        }
+
+        .admin-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.65rem 1rem;
+            background: #0f172a;
+            color: #cbd5e1;
+            border-radius: 24px;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a:focus-visible {
+            background: #1e293b;
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+
+        .admin-nav a.active {
+            background: #38bdf8;
+            color: #0f172a;
+            border-color: #38bdf8;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-top: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .section {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-heading {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            color: #93c5fd;
+        }
+
+        .card-grid {
+            display: grid;
+            gap: 1.25rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        details.panel-details {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 1rem 1.25rem 0.75rem;
+            border: 1px solid #334155;
+        }
+
+        details.panel-details summary {
+            cursor: pointer;
+            list-style: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-bottom: 1rem;
+            outline: none;
+        }
+
+        details.panel-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.panel-details[open] {
+            padding-bottom: 1.25rem;
+        }
+
+        details.panel-details summary:hover {
+            color: #7dd3fc;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #334155;
+        }
+
+        .card h2 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: #38bdf8;
+            border-left: 4px solid #0ea5e9;
+            padding-left: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: #cbd5e1
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.6rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            color: white;
+            font-family: inherit;
+        }
+
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        button.danger {
+            background: #ef4444
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0
+        }
+
+        th {
+            background: #0f172a;
+            color: #38bdf8
+        }
+
+        .student-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap
+        }
+
+        .small-input {
+            width: 80px
+        }
+
+        .material-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .material-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .material-row input {
+            width: 100%;
+            border-radius: 20px;
+            padding: 0.6rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+        }
+
+        .material-row button {
+            white-space: nowrap;
+            padding: 0.55rem 0.9rem;
+            border-radius: 24px;
+            background: #ef4444;
+            border: none;
+        }
+
+        .material-row button:hover {
+            opacity: 0.95;
+        }
+
+        .message {
+            padding: 0.8rem;
+            border-radius: 24px;
+            margin-bottom: 1rem
+        }
+
+        .success {
+            background: #064e3b;
+            color: #4ade80
+        }
+
+        .error {
+            background: #450a0a;
+            color: #f87171
+        }
+
+        .link-button {
+            background: transparent;
+            border: none;
+            color: #38bdf8;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+            font: inherit;
+        }
+
+        .student-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.75);
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .student-modal.active {
+            display: flex;
+        }
+
+        .student-modal-content {
+            width: 100%;
+            max-width: 720px;
+            max-height: calc(100vh - 2rem);
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 28px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .student-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            background: #111827;
+        }
+
+        .student-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #38bdf8;
+        }
+
+        .student-modal-header .close-btn {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            border-radius: 999px;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .student-modal-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+            display: grid;
+            gap: 1.25rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 220px);
+        }
+
+        .student-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .student-info-card {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 1rem;
+        }
+
+        .student-info-card h3 {
+            margin: 0 0 0.75rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .student-info-card p {
+            margin: 0.25rem 0;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .student-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .student-modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .student-modal-table th,
+        .student-modal-table td {
+            padding: 0.9rem 0.8rem;
+            border-bottom: 1px solid #334155;
+            color: #e2e8f0;
+            text-align: left;
+        }
+
+        .student-modal-table th {
+            background: #0f172a;
+            color: #38bdf8;
+        }
+
+        .student-modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .student-modal-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .student-modal-info span {
+            color: #94a3b8;
+            font-size: 0.92rem;
+        }
+
+        .student-modal .form-group input {
+            width: 100%;
+        }
+    </style>
     <script src="/api-base.js"></script>
 </head>
 
@@ -32,10 +522,7 @@
                 <h1>📐 MATH CAPSULE | Admin Control</h1>
                 <p class="subtitle">Fast access to library, student, quiz and tutor controls.</p>
             </div>
-            <div style="display:flex;gap:0.75rem;align-items:center;">
-                <button class="theme-toggle">Switch to dark mode</button>
-                <button class="logout-btn" id="logoutBtn">Logout</button>
-            </div>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
         </div>
 
         <div class="admin-nav">

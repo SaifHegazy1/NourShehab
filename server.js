@@ -202,7 +202,7 @@ const buildFolderTree = (folders, videos = []) => {
 
     const unassigned = [];
     videos.forEach(video => {
-        const assignedIds = Array.isArray(video.folders) ? video.folders.map(f => f? f._id.toString() : null).filter(Boolean) : [];
+        const assignedIds = Array.isArray(video.folders) ? video.folders.map(f => f ? f._id.toString() : null).filter(Boolean) : [];
         if (assignedIds.length === 0) {
             unassigned.push(video);
         } else {
@@ -225,7 +225,7 @@ const buildFolderTreeForQuizzes = (folders, quizzes = []) => {
 
     const unassigned = [];
     quizzes.forEach(quiz => {
-        const assignedIds = Array.isArray(quiz.folders) ? quiz.folders.map(f => f? f._id.toString() : null).filter(Boolean) : [];
+        const assignedIds = Array.isArray(quiz.folders) ? quiz.folders.map(f => f ? f._id.toString() : null).filter(Boolean) : [];
         if (assignedIds.length === 0) {
             unassigned.push(quiz);
             return;
@@ -438,7 +438,7 @@ app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) =
         if (!['video', 'quiz'].includes(folderType)) {
             return res.status(400).json({ error: 'Invalid folder type. Use "video" or "quiz".' });
         }
-        
+
         let parentFolder = null;
         if (parentFolderId && parentFolderId.trim && parentFolderId.trim() !== '') {
             if (!mongoose.Types.ObjectId.isValid(parentFolderId)) {
@@ -453,13 +453,13 @@ app.post('/api/admin/folders', authenticateJWT, requireAdmin, async (req, res) =
                 return res.status(400).json({ error: 'Folder type must match parent folder type' });
             }
         }
-        
-        const folder = await Folder.create({ 
-            name: name.trim(), 
+
+        const folder = await Folder.create({
+            name: name.trim(),
             parentFolder: parentFolder ? parentFolder._id : null,
             folderType
         });
-        
+
         res.json({ success: true, folder });
     } catch (err) {
         console.error('Folder creation error:', err);
