@@ -1,0 +1,1046 @@
+:root {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --surface: rgba(255,255,255,0.92);
+  --surface-strong: #ffffff;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: rgba(15,23,42,0.12);
+  --primary: #2563eb;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59,130,246,0.14);
+  --shadow: 0 24px 80px rgba(15,23,42,0.08);
+  --radius: 28px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #050816;
+  --surface: rgba(15,23,42,0.92);
+  --surface-strong: #0f172a;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: rgba(148,163,184,0.18);
+  --primary: #38bdf8;
+  --accent: #818cf8;
+  --accent-soft: rgba(56,189,248,0.18);
+  --shadow: 0 28px 90px rgba(0,0,0,0.28);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  background: radial-gradient(circle at top left, rgba(59,130,246,0.15), transparent 22%),
+              linear-gradient(180deg, var(--bg), var(--bg) 100%);
+  color: var(--text);
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+img, svg {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(59,130,246,0.45);
+  outline-offset: 2px;
+}
+
+.container,
+.page-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+}
+
+.header,
+.top-bar,
+.admin-nav,
+.section,
+.quiz-panel,
+.video-container,
+.student-modal-content,
+.login-card,
+.card,
+.details-panel {
+  color: var(--text);
+}
+
+.header,
+.top-bar,
+.admin-nav,
+.card,
+.quiz-panel,
+.video-container,
+.details-panel,
+.student-modal-content,
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.header,
+.top-bar,
+.admin-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header {
+  padding: 1.5rem 1.75rem;
+  flex-wrap: wrap;
+}
+
+.header h1,
+.hero-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.5vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.header h1 {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle,
+.hero-subtitle,
+.student-info-card p,
+.course-meta,
+.video-meta,
+.quizzes-meta,
+.label-small {
+  color: var(--muted);
+}
+
+.logout-btn,
+.theme-toggle,
+.button-primary,
+.button-secondary,
+.btn-outline,
+.tab-button,
+.quiz-card button,
+.student-modal-header .close-btn,
+.material-row button,
+.folder-toggle {
+  border: none;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.logout-btn,
+.button-primary,
+.theme-toggle,
+.button-secondary,
+.quiz-card button,
+.material-row button,
+.folder-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.logout-btn,
+.button-primary,
+.theme-toggle {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+}
+
+.theme-toggle {
+  padding: 0.8rem 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 14px 34px rgba(59,130,246,0.22);
+}
+
+.logout-btn {
+  padding: 0.8rem 1.35rem;
+  font-weight: 700;
+  background: #ef4444;
+}
+
+.logout-btn:hover,
+.button-primary:hover,
+.theme-toggle:hover,
+.button-secondary:hover,
+.quiz-card button:hover,
+.folder-toggle:hover,
+.btn-outline:hover {
+  transform: translateY(-1px);
+}
+
+.button-secondary,
+.btn-outline,
+.tab-button,
+.button-secondary,
+.student-modal-header .close-btn,
+.quiz-card button,
+.folder-toggle {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.button-secondary:hover,
+.tab-button:hover,
+.btn-outline:hover,
+.folder-toggle:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--accent-soft);
+}
+
+button.danger,
+.material-row button.danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+button.danger:hover,
+.material-row button.danger:hover {
+  background: #dc2626;
+}
+
+.card-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.card {
+  padding: 1.75rem;
+}
+
+.card:hover,
+.header:hover,
+.top-bar:hover,
+.quiz-panel:hover,
+.video-container:hover,
+.student-modal-content:hover,
+.login-card:hover {
+  transform: translateY(-2px);
+}
+
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.88);
+  color: var(--text);
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: rgba(15,23,42,0.88);
+  color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+button,
+.theme-toggle,
+.logout-btn,
+.button-primary,
+.button-secondary,
+.tab-button,
+.btn-outline,
+.quiz-card button,
+.material-row button,
+.folder-toggle {
+  font: inherit;
+}
+
+button,
+.theme-toggle,
+.logout-btn,
+.button-primary,
+.button-secondary,
+.tab-button,
+.btn-outline,
+.quiz-card button,
+.folder-toggle {
+  cursor: pointer;
+}
+
+button,
+.theme-toggle,
+.logout-btn,
+.button-primary,
+.button-secondary,
+.tab-button,
+.btn-outline,
+.quiz-card button,
+.folder-toggle {
+  min-height: 44px;
+}
+
+.link-button {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font: inherit;
+}
+
+.login-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.8);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.login-modal.active {
+  display: flex;
+}
+
+.login-card {
+  width: min(100%, 440px);
+  padding: 2rem;
+  border-radius: 2rem;
+  position: relative;
+}
+
+.login-card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.9rem;
+  color: var(--text);
+}
+
+.login-card input {
+  background: rgba(255,255,255,0.9);
+}
+
+.login-card button {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  border: none;
+  font-weight: 700;
+}
+
+.admin-nav {
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.8);
+  padding: 0.8rem 1rem;
+}
+
+.admin-nav a {
+  padding: 0.85rem 1.15rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  color: var(--text);
+}
+
+.admin-nav a.active,
+.admin-nav a:hover,
+.admin-nav a:focus-visible {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--accent-soft);
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.section-heading {
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+
+details.panel-details {
+  padding: 1.1rem 1.25rem;
+  border-radius: 1.75rem;
+  background: rgba(255,255,255,0.88);
+}
+
+html[data-theme="dark"] details.panel-details {
+  background: rgba(15,23,42,0.92);
+}
+
+details.panel-details summary {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.35rem;
+  color: var(--primary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+tbody tr:hover {
+  background: var(--accent-soft);
+}
+
+.student-actions,
+.material-row,
+.player-controls,
+.quiz-grid,
+.folder-header,
+.info-bar,
+.change-password-panel {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.student-actions,
+.material-row {
+  flex-wrap: wrap;
+}
+
+.small-input {
+  width: 90px;
+}
+
+.material-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.material-row {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+}
+
+.material-row input {
+  background: rgba(255,255,255,0.88);
+}
+
+html[data-theme="dark"] .material-row input {
+  background: rgba(15,23,42,0.88);
+}
+
+.message {
+  padding: 0.9rem 1rem;
+  border-radius: 1.25rem;
+  margin-bottom: 1rem;
+  background: rgba(59,130,246,0.1);
+  color: var(--text);
+}
+
+.success {
+  color: #16a34a;
+  background: rgba(34,197,94,0.12);
+}
+
+.error {
+  color: #dc2626;
+  background: rgba(248,113,113,0.12);
+}
+
+.student-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15,23,42,0.75);
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.student-modal.active {
+  display: flex;
+}
+
+.student-modal-content {
+  width: min(100%, 720px);
+  max-height: calc(100vh - 2rem);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+
+.student-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.student-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.student-modal-header .close-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.3rem;
+}
+
+.student-modal-body {
+  padding: 1.3rem 1.4rem 1.5rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.student-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.student-info-card,
+.student-modal-table,
+.change-password-panel,
+.quiz-info-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.student-info-card {
+  border-radius: 1.25rem;
+  padding: 1rem;
+}
+
+.student-info-card h3 {
+  margin: 0 0 0.65rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.student-info-card p {
+  margin: 0.35rem 0;
+  color: var(--text);
+}
+
+.student-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+
+.student-modal-table th,
+.student-modal-table td {
+  padding: 1rem 0.9rem;
+  color: var(--text);
+}
+
+.student-modal-table th {
+  background: rgba(59,130,246,0.08);
+  color: var(--primary);
+}
+
+.student-modal-actions {
+  align-items: center;
+}
+
+.student-modal-info span {
+  color: var(--muted);
+}
+
+.student-modal .form-group input {
+  width: 100%;
+}
+
+.top-bar {
+  background: var(--surface);
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+}
+
+.top-bar .logo {
+  font-weight: 800;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.top-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-bar a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.top-bar a:hover,
+.top-bar a:focus-visible {
+  background: var(--accent-soft);
+  color: var(--primary);
+}
+
+.video-container,
+.quiz-panel {
+  margin: 2rem auto;
+  border-radius: 2rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.video-container {
+  border: 1px solid var(--border);
+  max-width: 1100px;
+  background: var(--surface-strong);
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  background: #000;
+}
+
+.video-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.player-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 20;
+}
+
+.player-overlay button {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  color: #fff;
+  padding: 0.9rem 1.8rem;
+  border-radius: 999px;
+}
+
+.folder-card,
+.video-wrapper .player-controls,
+.quiz-card,
+.quiz-info-panel,
+.change-password-panel,
+.folder-empty {
+  border-radius: 1.5rem;
+}
+
+.folder-card,
+.folder-empty,
+.quiz-card,
+.quiz-info-panel,
+.change-password-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.folder-card {
+  padding: 1rem;
+}
+
+.folder-header,
+.info-bar,
+.change-password-panel,
+.player-controls {
+  gap: 1rem;
+}
+
+.folder-header {
+  justify-content: space-between;
+}
+
+.folder-title {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.folder-meta,
+.material-link,
+.quiz-card p,
+.quiz-card small,
+.quiz-info-panel p,
+.quiz-info-panel a,
+.change-password-panel label,
+.control-label {
+  color: var(--muted);
+}
+
+.folder-toggle,
+.btn-outline,
+.tab-button,
+.change-password-panel button {
+  padding: 0.65rem 1rem;
+}
+
+.folder-toggle,
+.btn-outline,
+.tab-button {
+  border-radius: 999px;
+}
+
+.folder-toggle {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.video-wrapper:fullscreen,
+.video-wrapper:-webkit-full-screen {
+  padding-bottom: 0;
+  height: 100%;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+}
+
+.info-bar {
+  padding: 1rem 1.5rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.video-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.material-link a {
+  color: var(--primary);
+}
+
+.views-info {
+  background: var(--accent-soft);
+  color: var(--primary);
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.tab-bar {
+  padding: 1rem 1.5rem;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--surface);
+}
+
+.tab-button {
+  padding: 0.75rem 1.2rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.tab-button.active,
+.tab-button:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--accent-soft);
+}
+
+.quiz-panel {
+  max-width: 1100px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.quiz-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.quiz-card {
+  padding: 1.2rem;
+}
+
+.quiz-card h3 {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+.quiz-card button {
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.quiz-card button:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.quiz-info-panel {
+  padding: 1rem;
+}
+
+.quiz-info-panel button {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  border: none;
+}
+
+.change-password-panel {
+  width: 100%;
+  flex-direction: column;
+}
+
+.change-password-panel label {
+  margin-bottom: 0.35rem;
+}
+
+.change-password-panel input {
+  background: rgba(255,255,255,0.88);
+}
+
+.html[data-theme="dark"] .change-password-panel input {
+  background: rgba(15,23,42,0.88);
+}
+
+.change-password-message.error {
+  color: #f87171;
+}
+
+.change-password-message.success {
+  color: #4ade80;
+}
+
+.watermark {
+  position: fixed;
+  background: rgba(15,23,42,0.8);
+  backdrop-filter: blur(14px);
+  color: var(--primary);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(59,130,246,0.18);
+}
+
+.player-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.85rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15,23,42,0.7);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.player-controls.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.seek-slider {
+  appearance: none;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(82, 106, 238, 0.24);
+}
+
+.seek-slider::-webkit-slider-thumb,
+.seek-slider::-moz-range-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.time-label,
+.control-label,
+.control-select {
+  color: var(--muted);
+}
+
+.control-group {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.control-select {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+}
+
+.top-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.top-card-row .theme-toggle {
+  width: auto;
+}
+
+.card .logo {
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.card h2,
+.login-card h2,
+.hero-title,
+.section-heading {
+  color: var(--text);
+}
+
+@media (max-width: 860px) {
+  .header,
+  .top-bar,
+  .admin-nav,
+  .top-card-row,
+  .info-bar,
+  .folder-header,
+  .change-password-panel,
+  .player-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .top-bar > div,
+  .admin-nav,
+  .header {
+    width: 100%;
+  }
+
+  .admin-nav a {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .container,
+  .page-shell {
+    padding: 1rem;
+  }
+
+  .card,
+  .login-card,
+  .quiz-panel,
+  .info-bar,
+  .student-modal-content,
+  .video-container {
+    border-radius: 1.5rem;
+  }
+
+  .button-primary,
+  .theme-toggle,
+  .button-secondary,
+  .logout-btn,
+  .tab-button,
+  .btn-outline,
+  .folder-toggle {
+    width: 100%;
+  }
+}

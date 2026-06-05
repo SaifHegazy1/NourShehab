@@ -1,386 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Watch | ENG NOUR SHEHAB MATH CAPSULE</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
-        body{background:#0a0f1c;font-family:'Inter',system-ui,sans-serif}
-        .top-bar{
-            background: #0f172a;
-            padding: 0.8rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1e293b;
-        }
-        .logo{
-            font-weight: 800;
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .top-bar a{
-            color: #94a3b8;
-            text-decoration: none;
-            margin-left: 1.5rem;
-        }
-        .video-container{
-            max-width: 1100px;
-            margin: 2rem auto;
-            background: #000;
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            border: 1px solid #1e293b;
-        }
-        .video-wrapper{position:relative;width:100%;padding-bottom:56.25%}
-        .video-wrapper iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
-        #playerContainer{position:absolute;top:0;left:0;width:100%;height:100%;}
-        .youtube-blocker{position:absolute;inset:0;z-index:24;pointer-events:none;}
-        .youtube-blocker-edge{position:absolute;background:transparent;pointer-events:all;}
-        .youtube-blocker-edge.top{top:0;left:0;width:100%;height:22%;}
-        .youtube-blocker-edge.bottom{bottom:0;left:0;width:100%;height:22%;}
-        .youtube-blocker-edge.left{top:22%;left:0;width:22%;height:56%;}
-        .youtube-blocker-edge.right{top:22%;right:0;width:22%;height:56%;}
-        .player-frame{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
-        /* Ensure the overlay and its Play button sit above player controls on small screens (e.g. iPhone) */
-        .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:2000;pointer-events:auto}
-        .player-overlay button{background:#38bdf8;border:none;color:#0f172a;font-size:1rem;font-weight:700;padding:0.9rem 1.8rem;border-radius:999px;cursor:pointer;box-shadow:0 15px 30px rgba(56,189,248,0.25);transition:transform 0.2s ease,filter 0.2s ease;position:relative;z-index:2001}
-        .player-overlay button:hover{transform:translateY(-2px);filter:brightness(1.05);}
-        .video-wrapper .fullscreen-btn{position:absolute;top:16px;right:16px;z-index:30;}
-        .video-wrapper .player-watermark{position:absolute;top:16px;left:16px;z-index:40;pointer-events:none;}
-        .folder-card{width:100%;background:#09101d;border:1px solid #0f172a;border-radius:16px;padding:0.9rem;margin-bottom:0.85rem;}
-        .folder-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;cursor:pointer;}
-        .folder-title{color:#e2e8f0;font-weight:700;font-size:0.98rem;}
-        .folder-meta{color:#94a3b8;font-size:0.85rem;}
-        .folder-toggle{background:transparent;border:1px solid #334155;color:#cbd5e1;padding:0.35rem 0.9rem;border-radius:999px;cursor:pointer;transition:all 0.2s;}
-        .folder-toggle:hover{border-color:#38bdf8;color:#38bdf8;}
-        .folder-content{margin-top:0.75rem;display:none;}
-        .folder-empty{color:#94a3b8;font-size:0.9rem;padding:0.75rem 0.5rem;background:#0b1524;border-radius:12px;}
-        .video-wrapper:fullscreen, .video-wrapper:-webkit-full-screen{padding-bottom:0;height:100%;width:100%;max-width:none;max-height:none;border-radius:0;}
-        .video-wrapper:fullscreen #playerContainer, .video-wrapper:-webkit-full-screen #playerContainer{height:100%;}
-        .video-wrapper:fullscreen .player-overlay, .video-wrapper:-webkit-full-screen .player-overlay{position:absolute;top:0;left:0;width:100%;height:100%;}
-        .video-wrapper:fullscreen .player-watermark, .video-wrapper:-webkit-full-screen .player-watermark{position:fixed;top:20px;left:20px;}
-        .info-bar{
-            background: #0f172a;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .video-title{color:#f1f5f9;font-weight:600}
-        .material-link{color:#a5f3fc;font-size:0.95rem;margin-top:0.4rem;}
-        .material-link a{color:#38bdf8;text-decoration:none;}
-        .material-link a:hover{text-decoration:underline;}
-        .views-info{
-            background: #0ea5e9;
-            padding: 0.3rem 1rem;
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        .btn-outline{
-            background: transparent;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 0.4rem 1rem;
-            border-radius: 100px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-outline:hover{
-            border-color: #38bdf8;
-            color: #38bdf8;
-        }
-        .tab-bar{
-            display:flex;
-            gap:0.5rem;
-            justify-content:center;
-            padding:1rem 2rem;
-            background:#0f172a;
-            border-bottom:1px solid #1e293b;
-        }
-        .tab-button{
-            background:transparent;
-            border:1px solid #334155;
-            color:#cbd5e1;
-            padding:0.65rem 1.2rem;
-            border-radius:999px;
-            cursor:pointer;
-            font-weight:700;
-            transition:all 0.2s;
-        }
-        .tab-button.active,
-        .tab-button:hover{
-            border-color:#38bdf8;
-            color:#38bdf8;
-        }
-        .quiz-panel{
-            max-width:1100px;
-            margin:2rem auto;
-            padding:1rem;
-            background:#0f172a;
-            border:1px solid #1e293b;
-            border-radius:32px;
-            box-shadow:0 20px 40px rgba(0,0,0,0.5);
-        }
-        .quiz-grid{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-            gap:1rem;
-        }
-        .quiz-card{
-            background:#071022;
-            border:1px solid #0f172a;
-            border-radius:16px;
-            padding:1rem;
-            display:flex;
-            flex-direction:column;
-            gap:0.75rem;
-        }
-        .quiz-card h3{
-            color:#e2e8f0;
-            margin-bottom:0.25rem;
-            font-size:1rem;
-        }
-        .quiz-card p{
-            color:#94a3b8;
-            line-height:1.4;
-            font-size:0.92rem;
-        }
-        .quiz-card small{
-            color:#64748b;
-            font-size:0.78rem;
-        }
-        .quiz-card a,
-        .quiz-card button{
-            color:#38bdf8;
-        }
-        .quiz-card button{
-            background:transparent;
-            border:1px solid #334155;
-            border-radius:999px;
-            padding:0.6rem 1rem;
-            cursor:pointer;
-            width:max-content;
-            transition:all 0.2s;
-        }
-        .quiz-card button:hover{
-            border-color:#38bdf8;
-            color:#7dd3fc;
-        }
-        .quiz-info-panel{
-            margin-top:1rem;
-            background:#071022;
-            border:1px solid #0f172a;
-            border-radius:16px;
-            padding:1rem;
-            color:#cbd5e1;
-        }
-        .quiz-info-panel h3{
-            margin-bottom:0.5rem;
-            color:#e2e8f0;
-        }
-        .quiz-info-panel p{
-            margin-bottom:1rem;
-            line-height:1.6;
-        }
-        .quiz-info-panel a{
-            color:#38bdf8;
-            text-decoration:none;
-        }
-        .quiz-info-panel a:hover{
-            text-decoration:underline;
-        }
-        .quiz-info-panel button{
-            background: #3b82f6;
-            border: none;
-            color: #ffffff;
-            padding: 0.95rem 1.6rem;
-            border-radius: 999px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 0.75rem;
-            transition: transform 0.2s ease, background 0.2s ease;
-        }
-        .quiz-info-panel button:hover{
-            background: #2563eb;
-            transform: translateY(-1px);
-        }
-        .change-password-panel{
-            display: none;
-            background: #0f172a;
-            border-top: 1px solid #1e293b;
-            padding: 1.25rem 2rem;
-            gap: 1rem;
-        }
-        .change-password-panel.active{display: flex;}
-        .change-password-panel .form-row{
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        .change-password-panel label{
-            color: #cbd5e1;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        .change-password-panel input{
-            width: 100%;
-            padding: 0.85rem 1rem;
-            background: #071022;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            color: #e2e8f0;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .change-password-panel input:focus{
-            border-color: #38bdf8;
-            box-shadow: 0 0 12px rgba(56,189,248,0.18);
-        }
-        .change-password-message{
-            font-size: 0.95rem;
-            min-height: 1.3rem;
-        }
-        .change-password-message.error{color: #f87171;}
-        .change-password-message.success{color: #4ade80;}
-        .watermark{
-            position: fixed;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(8px);
-            color: #38bdf8;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: monospace;
-            z-index: 1000;
-            pointer-events: none;
-            letter-spacing: 0.5px;
-            border: 1px solid rgba(56,189,248,0.3);
-            transition: all 0.3s ease;
-        }
-        .corner-tl{top:20px;left:20px}
-        .corner-tr{top:20px;right:20px}
-        .corner-bl{bottom:20px;left:20px}
-        .corner-br{bottom:20px;right:20px}
-        .player-controls{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.8);
-            padding: 0.75rem 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            z-index: 25;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            flex-wrap: wrap;
-            pointer-events: none;
-        }
-        .player-controls.visible{
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .iframe-blocker{
-            position: absolute;
-            inset: 0;
-            z-index: 20;
-            pointer-events: auto;
-            background: transparent;
-            display: none;
-        }
-        .seek-group{
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            width: 100%;
-        }
-        .seek-slider{
-            flex: 1;
-            appearance: none;
-            height: 6px;
-            border-radius: 999px;
-            background: #334155;
-            outline: none;
-            cursor: pointer;
-        }
-        .seek-slider::-webkit-slider-thumb,
-        .seek-slider::-moz-range-thumb{
-            appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #38bdf8;
-            border: none;
-            cursor: pointer;
-        }
-        .time-label{
-            color: #cbd5e1;
-            font-size: 0.85rem;
-            min-width: 42px;
-            text-align: center;
-        }
-        .control-group{
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-        .control-label{
-            color: #cbd5e1;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .control-select{
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .control-select:hover{
-            border-color: #38bdf8;
-            color: #38bdf8;
-        }
-        @media(max-width:640px){
-            .watermark{font-size:10px;padding:4px 12px}
-            .info-bar{flex-direction:column;align-items:flex-start}
-            .change-password-panel{padding:1rem}
-            .player-controls{padding:0.5rem}
-            .control-label{font-size:0.7rem}
-            .control-select{font-size:0.75rem}
-        }
-    </style>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js" defer></script>
     <script src="/api-base.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
+
 <body>
     <div class="top-bar">
         <div class="logo">📐 ENG NOUR SHEHAB | MATH CAPSULE</div>
-        <div><a href="/about">About</a><a href="/student" id="logoutLink">Logout</a></div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button class="theme-toggle">Switch to dark mode</button>
+            <a href="/about">About</a><a href="/student" id="logoutLink">Logout</a>
+        </div>
     </div>
     <div class="tab-bar">
         <button id="watchTabBtn" class="tab-button active">Watch</button>
         <button id="quizTabBtn" class="tab-button">Quizzes</button>
     </div>
     <div class="video-container" id="watchPanel">
-        <div id="videosList" style="padding:1rem;display:flex;gap:1rem;flex-wrap:wrap;background:#071022;border-bottom:1px solid #0f172a"></div>
+        <div id="videosList"
+            style="padding:1rem;display:flex;gap:1rem;flex-wrap:wrap;background:#071022;border-bottom:1px solid #0f172a">
+        </div>
         <div class="video-wrapper player-wrapper" id="playerWrapper">
             <div id="playerContainer"></div>
             <div class="player-controls" id="playerControls">
@@ -413,20 +60,22 @@
         </div>
         <div class="info-bar">
             <div>
-            <div class="video-title" id="videoTitle">Loading lesson...</div>
-            <div id="materialLinkContainer" class="material-link"></div>
-        </div>
+                <div class="video-title" id="videoTitle">Loading lesson...</div>
+                <div id="materialLinkContainer" class="material-link"></div>
+            </div>
             <div class="views-info" id="viewsInfo">🎬 Views: --</div>
             <button class="btn-outline" id="changePwdBtn">Change Password</button>
         </div>
         <div class="change-password-panel" id="changePwdForm">
             <div class="form-row">
                 <label for="currentPassword">Current Password</label>
-                <input type="password" id="currentPassword" autocomplete="current-password" placeholder="Enter current password">
+                <input type="password" id="currentPassword" autocomplete="current-password"
+                    placeholder="Enter current password">
             </div>
             <div class="form-row">
                 <label for="newPassword">New Password</label>
-                <input type="password" id="newPassword" autocomplete="new-password" placeholder="Enter new password (min 4 chars)">
+                <input type="password" id="newPassword" autocomplete="new-password"
+                    placeholder="Enter new password (min 4 chars)">
             </div>
             <button class="btn-outline" id="submitChangePwdBtn">Save Password</button>
             <div class="change-password-message" id="changePwdMessage"></div>
@@ -440,15 +89,15 @@
 
     <script>
         const token = localStorage.getItem('token');
-        if(!token) window.location.href = '/student';
+        if (!token) window.location.href = '/student';
         let username = '', allocations = {}, viewConsumed = false, watermarkInterval = null;
         let currentYoutubeId = '';
 
-        function parseJWT(t){
-            try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch(e){return null}
+        function parseJWT(t) {
+            try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) } catch (e) { return null }
         }
         const user = parseJWT(token);
-        if(!user || user.role !== 'student') { localStorage.removeItem('token'); window.location.href = '/student'; }
+        if (!user || user.role !== 'student') { localStorage.removeItem('token'); window.location.href = '/student'; }
         username = user.username;
         refreshStudentInfo();
 
@@ -466,9 +115,9 @@
         fullscreenBtn.onclick = toggleFullscreen;
         videoWrapper.appendChild(fullscreenBtn);
 
-        const corners = ['corner-tl','corner-tr','corner-bl','corner-br'];
+        const corners = ['corner-tl', 'corner-tr', 'corner-bl', 'corner-br'];
         let idx = 0;
-        watermarkInterval = setInterval(() => { idx = (idx+1)%4; watermark.className = `watermark ${corners[idx]}`; }, 30000);
+        watermarkInterval = setInterval(() => { idx = (idx + 1) % 4; watermark.className = `watermark ${corners[idx]}`; }, 30000);
 
         function getFullscreenElement() {
             return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
@@ -505,7 +154,7 @@
                     }
                 });
             } else {
-                exitFullscreen().catch(() => {});
+                exitFullscreen().catch(() => { });
             }
         }
 
@@ -516,7 +165,7 @@
         // Anti-copy measures
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
-            if(e.key === 'F12' || (e.ctrlKey && (e.key === 'u'||e.key === 's'||e.key === 'I'))) e.preventDefault();
+            if (e.key === 'F12' || (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'I'))) e.preventDefault();
         });
 
         async function refreshStudentInfo() {
@@ -597,7 +246,7 @@
             const res = await apiFetch('/api/student/folders', { headers: { 'Authorization': `Bearer ${token}` } });
             const container = document.getElementById('videosList');
             container.innerHTML = '';
-            if(!res.ok) {
+            if (!res.ok) {
                 const error = document.createElement('div');
                 error.style.color = '#f87171';
                 error.textContent = 'Unable to load lessons. Please refresh.';
@@ -861,7 +510,7 @@
             info.style.color = '#94a3b8';
             info.style.fontSize = '0.85rem';
             const assigned = allocations[v._id] || 0;
-            info.innerText = assigned > 0 ? `Allocated: ${assigned} view${assigned===1?'':'s'}` : 'No allocated views';
+            info.innerText = assigned > 0 ? `Allocated: ${assigned} view${assigned === 1 ? '' : 's'}` : 'No allocated views';
             const btn = document.createElement('button');
             btn.className = 'btn-outline';
             btn.innerText = assigned > 0 ? 'Watch (use 1 view)' : 'No views allocated';
@@ -940,7 +589,7 @@
             const overlay = document.createElement('div');
             overlay.className = 'player-overlay';
             overlay.id = 'player-overlay-start';
-            
+
             const btn = document.createElement('button');
             btn.innerText = 'Play Lesson';
             btn.onclick = () => {
@@ -983,7 +632,7 @@
 
                                     // ensure allow attribute contains necessary permissions
                                     let allow = (ifr.getAttribute('allow') || '').trim();
-                                    const needed = ['fullscreen','autoplay','encrypted-media','picture-in-picture'];
+                                    const needed = ['fullscreen', 'autoplay', 'encrypted-media', 'picture-in-picture'];
                                     needed.forEach(n => { if (!new RegExp(n).test(allow)) allow = allow ? `${allow}; ${n}` : n; });
                                     ifr.setAttribute('allow', allow);
                                     ifr.setAttribute('allowfullscreen', '');
@@ -1010,7 +659,7 @@
                 currentPlayer = null;
             }
             container.innerHTML = '<div id="yt-player" style="width:100%;height:100%"></div>';
-            
+
             currentPlayer = new YT.Player('yt-player', {
                 height: '100%',
                 width: '100%',
@@ -1094,7 +743,7 @@
             }
         }
 
-        document.getElementById('seekBar').addEventListener('input', function(e) {
+        document.getElementById('seekBar').addEventListener('input', function (e) {
             if (!currentPlayer || typeof currentPlayer.seekTo !== 'function') return;
             const seekValue = parseFloat(e.target.value);
             currentPlayer.seekTo(seekValue, true);
@@ -1108,7 +757,7 @@
         }
 
         // Speed control
-        document.getElementById('speedControl').addEventListener('change', function(e) {
+        document.getElementById('speedControl').addEventListener('change', function (e) {
             const speed = parseFloat(e.target.value);
             if (currentPlayer && currentPlayer.setPlaybackRate) {
                 currentPlayer.setPlaybackRate(speed);
@@ -1117,7 +766,7 @@
         });
 
         // Play/pause and seek controls
-        document.getElementById('playPauseBtn').addEventListener('click', function() {
+        document.getElementById('playPauseBtn').addEventListener('click', function () {
             if (!currentPlayer || !currentPlayer.getPlayerState) return;
             const state = currentPlayer.getPlayerState();
             if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
@@ -1127,19 +776,19 @@
             }
         });
 
-        document.getElementById('rewindBtn').addEventListener('click', function() {
+        document.getElementById('rewindBtn').addEventListener('click', function () {
             if (!currentPlayer || !currentPlayer.getCurrentTime || !currentPlayer.seekTo) return;
             const time = currentPlayer.getCurrentTime();
             currentPlayer.seekTo(Math.max(time - 10, 0), true);
         });
 
-        document.getElementById('forwardBtn').addEventListener('click', function() {
+        document.getElementById('forwardBtn').addEventListener('click', function () {
             if (!currentPlayer || !currentPlayer.getCurrentTime || !currentPlayer.seekTo) return;
             const time = currentPlayer.getCurrentTime();
             currentPlayer.seekTo(time + 10, true);
         });
 
-        document.getElementById('volumeBtn').addEventListener('click', function() {
+        document.getElementById('volumeBtn').addEventListener('click', function () {
             if (!currentPlayer || typeof currentPlayer.isMuted !== 'function') return;
             if (currentPlayer.isMuted()) {
                 currentPlayer.unMute();
@@ -1150,7 +799,7 @@
             showPlayerControls();
         });
 
-        document.getElementById('volumeSlider').addEventListener('input', function(e) {
+        document.getElementById('volumeSlider').addEventListener('input', function (e) {
             if (!currentPlayer || typeof currentPlayer.setVolume !== 'function' || typeof currentPlayer.isMuted !== 'function') return;
             const volume = Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0));
             currentPlayer.setVolume(volume);
@@ -1171,7 +820,7 @@
             showPlayerControls();
         }
 
-        window.addEventListener('keydown', function(e) {
+        window.addEventListener('keydown', function (e) {
             const activeTag = document.activeElement && document.activeElement.tagName;
             if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT' || document.activeElement.isContentEditable) {
                 return;
@@ -1206,7 +855,7 @@
         });
 
         // Restore previous speed setting
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             const savedSpeed = localStorage.getItem('videoSpeed');
             if (savedSpeed) {
                 document.getElementById('speedControl').value = savedSpeed;
@@ -1214,26 +863,26 @@
         });
 
         async function consumeForVideo(videoId, title, btn, infoEl) {
-            if((allocations[videoId] || 0) <= 0) return alert('No views allocated for this lesson');
+            if ((allocations[videoId] || 0) <= 0) return alert('No views allocated for this lesson');
             btn.disabled = true; btn.innerText = 'Processing...';
             const res = await apiFetch('/api/student/consume-view-for-video', {
-                method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ videoId })
             });
             const data = await res.json();
-            if(!res.ok) {
+            if (!res.ok) {
                 alert(data.error || 'Failed to consume view');
                 btn.disabled = false; btn.innerText = 'Watch (use 1 view)';
                 return;
             }
-            if(data.newToken) localStorage.setItem('token', data.newToken);
+            if (data.newToken) localStorage.setItem('token', data.newToken);
             allocations[videoId] = Math.max((allocations[videoId] || 1) - 1, 0);
             const remaining = allocations[videoId];
             btn.innerText = remaining > 0 ? 'Watch (use 1 view)' : 'No views allocated';
             btn.disabled = remaining <= 0;
             document.getElementById('videoTitle').innerText = title || 'Lesson';
             document.getElementById('viewsInfo').innerText = '🎬 Views are assigned per lesson';
-            infoEl.innerText = `Allocated: ${remaining} view${remaining===1?'':'s'}`;
+            infoEl.innerText = `Allocated: ${remaining} view${remaining === 1 ? '' : 's'}`;
             const materialContainer = document.getElementById('materialLinkContainer');
             if (materialContainer) {
                 const materials = Array.isArray(data.video?.materials) && data.video.materials.length > 0 ? data.video.materials : (data.video?.materialLink ? [{ title: data.video.materialTitle || 'View material', link: data.video.materialLink }] : []);
@@ -1282,7 +931,7 @@
 
             const res = await apiFetch('/api/auth/change-password', {
                 method: 'POST',
-                headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ currentPassword, newPassword })
             });
             const data = await res.json();
@@ -1311,34 +960,35 @@
             }
         }
         initPage();
-        window.addEventListener('beforeunload', () => { if(watermarkInterval) clearInterval(watermarkInterval); });
+        window.addEventListener('beforeunload', () => { if (watermarkInterval) clearInterval(watermarkInterval); });
 
         // Prevent any code on this page from opening external YouTube links.
-        (function(){
+        (function () {
             const YT_RE = /(?:youtube\.com\/watch|youtu\.be)/i;
             const origOpen = window.open.bind(window);
-            window.open = function(url, target, features){
-                try{
-                    if(typeof url === 'string' && YT_RE.test(url)){
+            window.open = function (url, target, features) {
+                try {
+                    if (typeof url === 'string' && YT_RE.test(url)) {
                         console.warn('Blocked external YouTube open:', url);
                         alert('Opening external YouTube links is disabled in this app.');
                         return null;
                     }
-                }catch(e){ }
+                } catch (e) { }
                 return origOpen(url, target, features);
             };
-            document.addEventListener('click', function(e){
-                try{
+            document.addEventListener('click', function (e) {
+                try {
                     const a = e.target.closest && e.target.closest('a');
-                    if(a && a.href && YT_RE.test(a.href)){
+                    if (a && a.href && YT_RE.test(a.href)) {
                         e.preventDefault();
                         console.warn('Blocked click to external YouTube URL:', a.href);
                         alert('Opening external YouTube links is disabled in this app.');
                         return false;
                     }
-                }catch(err){ }
+                } catch (err) { }
             }, true);
         })();
     </script>
 </body>
+
 </html>

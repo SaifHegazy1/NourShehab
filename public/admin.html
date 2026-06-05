@@ -6,498 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Admin | ENG NOUR SHEHAB MATH CAPSULE</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box
-        }
-
-        body {
-            background: #0f172a;
-            font-family: system-ui, sans-serif;
-            padding: 20px
-        }
-
-        .login-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center
-        }
-
-        .login-modal.active {
-            display: flex
-        }
-
-        .login-card {
-            background: #1e293b;
-            border-radius: 24px;
-            padding: 2rem;
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid #334155
-        }
-
-        .login-card h2 {
-            color: #38bdf8;
-            margin-bottom: 1rem;
-            text-align: center
-        }
-
-        .login-card .form-group {
-            margin-bottom: 1.5rem
-        }
-
-        .login-card label {
-            color: #cbd5e1;
-            font-weight: 500;
-            display: block;
-            margin-bottom: 0.5rem
-        }
-
-        .login-card input {
-            width: 100%;
-            padding: 0.8rem;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            color: white
-        }
-
-        .login-card input:focus {
-            border-color: #38bdf8;
-            outline: none
-        }
-
-        .login-btn {
-            width: 100%;
-            background: #0ea5e9;
-            color: white;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600
-        }
-
-        .login-btn:hover {
-            background: #0284c7
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto
-        }
-
-        .header {
-            background: #1e293b;
-            border-radius: 32px;
-            padding: 1rem 2rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            border: 1px solid #334155;
-        }
-
-        h1 {
-            font-size: 1.4rem;
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent
-        }
-
-        .logout-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.4rem;
-            border-radius: 40px;
-            cursor: pointer
-        }
-
-        .admin-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-            padding: 0.75rem 1rem;
-            background: #111827;
-            border: 1px solid #334155;
-            border-radius: 28px;
-        }
-
-        .admin-nav a {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.65rem 1rem;
-            background: #0f172a;
-            color: #cbd5e1;
-            border-radius: 24px;
-            text-decoration: none;
-            border: 1px solid transparent;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        .admin-nav a:hover,
-        .admin-nav a:focus-visible {
-            background: #1e293b;
-            border-color: #38bdf8;
-            color: #ffffff;
-        }
-
-        .admin-nav a.active {
-            background: #38bdf8;
-            color: #0f172a;
-            border-color: #38bdf8;
-        }
-
-        .subtitle {
-            color: #94a3b8;
-            margin-top: 0.25rem;
-            font-size: 0.95rem;
-        }
-
-        .section {
-            display: none;
-            margin-bottom: 1.5rem;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .section-heading {
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-            color: #93c5fd;
-        }
-
-        .card-grid {
-            display: grid;
-            gap: 1.25rem;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        }
-
-        details.panel-details {
-            background: #1e293b;
-            border-radius: 32px;
-            padding: 1rem 1.25rem 0.75rem;
-            border: 1px solid #334155;
-        }
-
-        details.panel-details summary {
-            cursor: pointer;
-            list-style: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #38bdf8;
-            margin-bottom: 1rem;
-            outline: none;
-        }
-
-        details.panel-details summary::-webkit-details-marker {
-            display: none;
-        }
-
-        details.panel-details[open] {
-            padding-bottom: 1.25rem;
-        }
-
-        details.panel-details summary:hover {
-            color: #7dd3fc;
-        }
-
-        .card {
-            background: #1e293b;
-            border-radius: 32px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #334155;
-        }
-
-        .card h2 {
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-            color: #38bdf8;
-            border-left: 4px solid #0ea5e9;
-            padding-left: 0.8rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem
-        }
-
-        label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 0.3rem;
-            color: #cbd5e1
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 0.6rem;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 24px;
-            color: white;
-            font-family: inherit;
-        }
-
-        button {
-            background: #0ea5e9;
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        button.danger {
-            background: #ef4444
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse
-        }
-
-        th,
-        td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #334155;
-            color: #e2e8f0
-        }
-
-        th {
-            background: #0f172a;
-            color: #38bdf8
-        }
-
-        .student-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap
-        }
-
-        .small-input {
-            width: 80px
-        }
-
-        .material-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-            margin-top: 0.5rem;
-        }
-
-        .material-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .material-row input {
-            width: 100%;
-            border-radius: 20px;
-            padding: 0.6rem;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-        }
-
-        .material-row button {
-            white-space: nowrap;
-            padding: 0.55rem 0.9rem;
-            border-radius: 24px;
-            background: #ef4444;
-            border: none;
-        }
-
-        .material-row button:hover {
-            opacity: 0.95;
-        }
-
-        .message {
-            padding: 0.8rem;
-            border-radius: 24px;
-            margin-bottom: 1rem
-        }
-
-        .success {
-            background: #064e3b;
-            color: #4ade80
-        }
-
-        .error {
-            background: #450a0a;
-            color: #f87171
-        }
-
-        .link-button {
-            background: transparent;
-            border: none;
-            color: #38bdf8;
-            cursor: pointer;
-            text-decoration: underline;
-            padding: 0;
-            font: inherit;
-        }
-
-        .student-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            background: rgba(0, 0, 0, 0.75);
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-
-        .student-modal.active {
-            display: flex;
-        }
-
-        .student-modal-content {
-            width: 100%;
-            max-width: 720px;
-            max-height: calc(100vh - 2rem);
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 28px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-        }
-
-        .student-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #334155;
-            background: #111827;
-        }
-
-        .student-modal-header h2 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: #38bdf8;
-        }
-
-        .student-modal-header .close-btn {
-            background: transparent;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            border-radius: 999px;
-            width: 42px;
-            height: 42px;
-            cursor: pointer;
-            font-size: 1.5rem;
-            line-height: 1;
-        }
-
-        .student-modal-body {
-            padding: 1.25rem 1.5rem 1.5rem;
-            display: grid;
-            gap: 1.25rem;
-            overflow-y: auto;
-            max-height: calc(100vh - 220px);
-        }
-
-        .student-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-        }
-
-        .student-info-card {
-            background: #111827;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 1rem;
-        }
-
-        .student-info-card h3 {
-            margin: 0 0 0.75rem;
-            color: #94a3b8;
-            font-size: 0.95rem;
-        }
-
-        .student-info-card p {
-            margin: 0.25rem 0;
-            color: #e2e8f0;
-            font-size: 0.95rem;
-        }
-
-        .student-modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-
-        .student-modal-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #111827;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .student-modal-table th,
-        .student-modal-table td {
-            padding: 0.9rem 0.8rem;
-            border-bottom: 1px solid #334155;
-            color: #e2e8f0;
-            text-align: left;
-        }
-
-        .student-modal-table th {
-            background: #0f172a;
-            color: #38bdf8;
-        }
-
-        .student-modal-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .student-modal-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            align-items: center;
-        }
-
-        .student-modal-info span {
-            color: #94a3b8;
-            font-size: 0.92rem;
-        }
-
-        .student-modal .form-group input {
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="/theme.css">
+    <script src="/theme.js" defer></script>
     <script src="/api-base.js"></script>
 </head>
 
@@ -522,7 +32,10 @@
                 <h1>📐 MATH CAPSULE | Admin Control</h1>
                 <p class="subtitle">Fast access to library, student, quiz and tutor controls.</p>
             </div>
-            <button class="logout-btn" id="logoutBtn">Logout</button>
+            <div style="display:flex;gap:0.75rem;align-items:center;">
+                <button class="theme-toggle">Switch to dark mode</button>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
         </div>
 
         <div class="admin-nav">
@@ -540,9 +53,11 @@
             <div class="card-grid">
                 <div class="card">
                     <h2>📹 Default Video Settings</h2>
-                    <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text" id="youtubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+                    <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text"
+                            id="youtubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
                     <div class="form-group"><label>Video Title</label><input type="text" id="videoTitle"></div>
-                    <div class="form-group"><label>Description</label><textarea id="videoDesc" rows="2"></textarea></div>
+                    <div class="form-group"><label>Description</label><textarea id="videoDesc" rows="2"></textarea>
+                    </div>
                     <button id="updateVideoBtn">Save Default Video</button>
                 </div>
             </div>
@@ -553,9 +68,12 @@
             <div class="card-grid">
                 <div class="card">
                     <h2>👩‍🏫 Tutor Profile</h2>
-                    <div class="form-group"><label>Tutor Name</label><input type="text" id="tutorName" placeholder="ENG NOUR SHEHAB"></div>
-                    <div class="form-group"><label>About Text</label><textarea id="tutorAbout" rows="3"></textarea></div>
-                    <div class="form-group"><label>Photo URL</label><input type="text" id="tutorPhotoUrl" placeholder="https://..."></div>
+                    <div class="form-group"><label>Tutor Name</label><input type="text" id="tutorName"
+                            placeholder="ENG NOUR SHEHAB"></div>
+                    <div class="form-group"><label>About Text</label><textarea id="tutorAbout" rows="3"></textarea>
+                    </div>
+                    <div class="form-group"><label>Photo URL</label><input type="text" id="tutorPhotoUrl"
+                            placeholder="https://..."></div>
                     <button id="updateTutorBtn">Update Profile</button>
                 </div>
             </div>
@@ -566,14 +84,17 @@
             <div class="card-grid">
                 <details class="panel-details" open>
                     <summary>➕ Add New Video to Library</summary>
-                    <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text" id="newVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+                    <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text"
+                            id="newVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
                     <div class="form-group"><label>Video Title</label><input type="text" id="newVideoTitle"></div>
-                    <div class="form-group"><label>Description</label><textarea id="newVideoDesc" rows="2"></textarea></div>
+                    <div class="form-group"><label>Description</label><textarea id="newVideoDesc" rows="2"></textarea>
+                    </div>
                     <div class="form-group">
                         <label>Material resources (optional)</label>
                         <div id="newVideoMaterialsContainer"></div>
                         <button type="button" id="addNewVideoMaterialBtn">Add material link</button>
-                        <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable resources for the lesson.</small>
+                        <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable
+                            resources for the lesson.</small>
                     </div>
                     <div class="form-group"><label>Select Folders</label>
                         <select id="newVideoFolderSelect" multiple size="5"></select>
@@ -584,7 +105,8 @@
 
                 <details class="panel-details" open>
                     <summary>📁 Folder Library</summary>
-                    <div class="form-group"><label>Folder Name</label><input type="text" id="newFolderName" placeholder="New folder name"></div>
+                    <div class="form-group"><label>Folder Name</label><input type="text" id="newFolderName"
+                            placeholder="New folder name"></div>
                     <div class="form-group"><label>Folder Type</label>
                         <select id="newFolderType">
                             <option value="video">Video Folder</option>
@@ -592,7 +114,9 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Parent Folder (optional)</label>
-                        <select id="parentFolderSelect"><option value="">Root folder</option></select>
+                        <select id="parentFolderSelect">
+                            <option value="">Root folder</option>
+                        </select>
                     </div>
                     <button id="createFolderBtn" type="button">Create Folder</button>
                     <div id="folderTreeContainer" style="margin-top:1rem"></div>
@@ -605,7 +129,9 @@
                         <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to select multiple videos.</small>
                     </div>
                     <div class="form-group"><label>Select Folder</label>
-                        <select id="assignFolderSelect"><option value="">Root (clear assignment)</option></select>
+                        <select id="assignFolderSelect">
+                            <option value="">Root (clear assignment)</option>
+                        </select>
                     </div>
                     <button id="assignFolderBtn">Assign Selected Videos</button>
                 </details>
@@ -633,14 +159,17 @@
             <div class="card" id="editVideoCard" style="display:none">
                 <h2>✏️ Edit Video</h2>
                 <input type="hidden" id="editVideoId">
-                <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text" id="editVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
+                <div class="form-group"><label>YouTube Video ID or Full Link</label><input type="text"
+                        id="editVideoYoutubeId" placeholder="dQw4w9WgXcQ or https://youtu.be/dQw4w9WgXcQ"></div>
                 <div class="form-group"><label>Video Title</label><input type="text" id="editVideoTitle"></div>
-                <div class="form-group"><label>Description</label><textarea id="editVideoDesc" rows="2"></textarea></div>
+                <div class="form-group"><label>Description</label><textarea id="editVideoDesc" rows="2"></textarea>
+                </div>
                 <div class="form-group">
                     <label>Material resources (optional)</label>
                     <div id="editVideoMaterialsContainer"></div>
                     <button type="button" id="addEditVideoMaterialBtn">Add material link</button>
-                    <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable resources for the lesson.</small>
+                    <small style="color:#94a3b8;display:block;margin-top:0.4rem">Add one or more downloadable resources
+                        for the lesson.</small>
                 </div>
                 <div class="form-group"><label>Select Folders</label>
                     <select id="editVideoFolderSelect" multiple size="5"></select>
@@ -656,9 +185,12 @@
             <div class="card-grid">
                 <div class="card">
                     <h2>➕ Add New Quiz</h2>
-                    <div class="form-group"><label>Quiz Title</label><input type="text" id="newQuizTitle" placeholder="Enter quiz title"></div>
-                    <div class="form-group"><label>Quiz Description</label><textarea id="newQuizDescription" rows="3" placeholder="Enter quiz description"></textarea></div>
-                    <div class="form-group"><label>Quiz Link</label><input type="text" id="newQuizLink" placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
+                    <div class="form-group"><label>Quiz Title</label><input type="text" id="newQuizTitle"
+                            placeholder="Enter quiz title"></div>
+                    <div class="form-group"><label>Quiz Description</label><textarea id="newQuizDescription" rows="3"
+                            placeholder="Enter quiz description"></textarea></div>
+                    <div class="form-group"><label>Quiz Link</label><input type="text" id="newQuizLink"
+                            placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
                     <div class="form-group"><label>Select Folder</label>
                         <select id="newQuizFolderSelect" multiple size="5"></select>
                         <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to assign to one or more folders.</small>
@@ -670,8 +202,10 @@
                     <h2>✏️ Edit Quiz</h2>
                     <input type="hidden" id="editQuizId">
                     <div class="form-group"><label>Quiz Title</label><input type="text" id="editQuizTitle"></div>
-                    <div class="form-group"><label>Quiz Description</label><textarea id="editQuizDescription" rows="3"></textarea></div>
-                    <div class="form-group"><label>Quiz Link</label><input type="text" id="editQuizLink" placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
+                    <div class="form-group"><label>Quiz Description</label><textarea id="editQuizDescription"
+                            rows="3"></textarea></div>
+                    <div class="form-group"><label>Quiz Link</label><input type="text" id="editQuizLink"
+                            placeholder="https://forms.office.com/r/fG91gsK3m8"></div>
                     <div class="form-group"><label>Select Folder</label>
                         <select id="editQuizFolderSelect" multiple size="5"></select>
                         <small style="color:#94a3b8">Hold Ctrl/Cmd or Shift to assign to one or more folders.</small>
@@ -712,15 +246,18 @@
 
                 <div class="card">
                     <h2>➕ Add Single Student</h2>
-                    <div class="form-group"><label>Username</label><input type="text" id="newStudentUsername" placeholder="Enter student name"></div>
+                    <div class="form-group"><label>Username</label><input type="text" id="newStudentUsername"
+                            placeholder="Enter student name"></div>
                     <button id="createStudentBtn">Create Student</button>
                     <div id="createResult"></div>
                 </div>
 
                 <div class="card">
                     <h2>🔐 Reset Student Password</h2>
-                    <div class="form-group"><label>Student Unique Code</label><input type="text" id="passwordStudentCode" placeholder="Enter student code"></div>
-                    <div class="form-group"><label>New Password</label><input type="password" id="newStudentPassword" placeholder="Minimum 4 characters"></div>
+                    <div class="form-group"><label>Student Unique Code</label><input type="text"
+                            id="passwordStudentCode" placeholder="Enter student code"></div>
+                    <div class="form-group"><label>New Password</label><input type="password" id="newStudentPassword"
+                            placeholder="Minimum 4 characters"></div>
                     <button id="changePasswordBtn">Set Password</button>
                 </div>
             </div>
@@ -730,24 +267,30 @@
                 <div class="form-group"><label>Select Students</label>
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                         <input type="checkbox" id="selectAllStudentsCheckbox">
-                        <label for="selectAllStudentsCheckbox" style="margin: 0; font-weight: 400; color: #cbd5e1;">Select All Students</label>
+                        <label for="selectAllStudentsCheckbox"
+                            style="margin: 0; font-weight: 400; color: #cbd5e1;">Select All Students</label>
                     </div>
-                    <input type="text" id="studentSearchInput" placeholder="Search by student id, code, or username" style="margin-bottom:0.75rem; width:100%;">
+                    <input type="text" id="studentSearchInput" placeholder="Search by student id, code, or username"
+                        style="margin-bottom:0.75rem; width:100%;">
                     <select id="viewStudentSelect" multiple size="6"></select>
-                    <small style="color:#94a3b8">Search by username, unique code, or student id; hold Ctrl/Cmd or Shift to select multiple.</small>
+                    <small style="color:#94a3b8">Search by username, unique code, or student id; hold Ctrl/Cmd or Shift
+                        to select multiple.</small>
                 </div>
                 <div class="form-group"><label>Views to Add</label><input type="number" id="viewsToAdd" min="1"></div>
                 <div class="form-group"><label>Select Videos</label>
-                    <input type="text" id="videoSearchInput" placeholder="Search by video title" style="margin-bottom:0.75rem; width:100%;">
+                    <input type="text" id="videoSearchInput" placeholder="Search by video title"
+                        style="margin-bottom:0.75rem; width:100%;">
                     <select id="videoSelect" multiple size="6"></select>
-                    <small style="color:#94a3b8">Search by video title; hold Ctrl/Cmd or Shift to select multiple.</small>
+                    <small style="color:#94a3b8">Search by video title; hold Ctrl/Cmd or Shift to select
+                        multiple.</small>
                 </div>
                 <button id="addViewsBtn">Assign Views</button>
             </div>
 
             <div class="card">
                 <h2>👥 Students List</h2>
-                <div class="form-group"><label>Search Student List</label><input type="text" id="studentTableSearchInput" placeholder="Search by username or code"></div>
+                <div class="form-group"><label>Search Student List</label><input type="text"
+                        id="studentTableSearchInput" placeholder="Search by username or code"></div>
                 <div style="overflow-x:auto">
                     <table>
                         <thead>
@@ -771,7 +314,8 @@
                             <h2 id="studentModalTitle">Student Details</h2>
                             <div id="studentModalSubtitle" class="student-modal-info"></div>
                         </div>
-                        <button type="button" class="close-btn" id="studentModalCloseBtn" aria-label="Close student details">×</button>
+                        <button type="button" class="close-btn" id="studentModalCloseBtn"
+                            aria-label="Close student details">×</button>
                     </div>
                     <div class="student-modal-body">
                         <div class="student-info-grid">
@@ -794,7 +338,8 @@
                         </div>
                         <div class="form-group">
                             <label>Change Password</label>
-                            <input type="password" id="studentModalNewPassword" placeholder="Enter new password (min 4 chars)">
+                            <input type="password" id="studentModalNewPassword"
+                                placeholder="Enter new password (min 4 chars)">
                             <button id="studentModalChangePasswordBtn">Change Password</button>
                             <div id="studentModalPasswordMessage" class="message" style="display:none"></div>
                         </div>
@@ -1736,13 +1281,13 @@
         // Handle select all students checkbox
         const selectAllCheckbox = document.getElementById('selectAllStudentsCheckbox');
         const viewStudentSelect = document.getElementById('viewStudentSelect');
-        
+
         selectAllCheckbox.addEventListener('change', (e) => {
             Array.from(viewStudentSelect.options).forEach(option => {
                 option.selected = e.target.checked;
             });
         });
-        
+
         viewStudentSelect.addEventListener('change', () => {
             const totalOptions = viewStudentSelect.options.length;
             const selectedOptions = Array.from(viewStudentSelect.selectedOptions).length;
