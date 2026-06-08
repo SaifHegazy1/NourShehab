@@ -11,9 +11,16 @@ function apiFetch(path, options = {}) {
   return fetch(apiUrl(path), options);
 }
 
+function parseResponseData(res) {
+  return res.clone().json().catch(async () => {
+    const text = await res.clone().text().catch(() => '');
+    return { error: text || 'Invalid JSON response from server' };
+  });
+}
+
 function apiFetchJson(path, options = {}) {
   return apiFetch(path, options).then(async res => {
-    const data = await res.json().catch(() => null);
+    const data = await parseResponseData(res);
     return { res, data };
   });
 }

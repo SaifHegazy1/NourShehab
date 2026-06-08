@@ -941,13 +941,7 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                let data;
-                try {
-                    data = await res.json();
-                } catch (parseErr) {
-                    const text = await res.text();
-                    data = { error: text || 'Invalid JSON response from server' };
-                }
+                const data = await parseResponseData(res);
 
                 if (res.ok && data.token) {
                     localStorage.setItem('adminToken', data.token);

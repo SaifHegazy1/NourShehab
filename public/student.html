@@ -165,13 +165,7 @@
                     body: JSON.stringify({ code, password: newPwd })
                 });
 
-                let data;
-                try {
-                    data = await res.json();
-                } catch (parseErr) {
-                    const text = await res.text();
-                    data = { error: text || 'Invalid JSON response from server' };
-                }
+                const data = await parseResponseData(res);
 
                 if(res.ok) {
                     showMessage('Password set! Please login now.', false);
@@ -188,13 +182,7 @@
                     body: JSON.stringify({ code, password })
                 });
 
-                let data;
-                try {
-                    data = await res.json();
-                } catch (parseErr) {
-                    const text = await res.text();
-                    data = { error: text || 'Invalid JSON response from server' };
-                }
+                const data = await parseResponseData(res);
 
                 if(res.ok) {
                     localStorage.setItem('token', data.token);
